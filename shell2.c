@@ -50,3 +50,8 @@ void print(){
 		printf("\"%s\"\n",words[i++]);
 	}
 }
+
+/*CD: We will need to load an external programme using the exec(function) 
+presumbaly by loading them from a file along a predefined path?
+The programme identifies the parameters in a given text and uses them in a method
+If programme is invaild then return Error messages (how to spot bad programme??)*/
