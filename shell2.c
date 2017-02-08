@@ -1,12 +1,22 @@
 #include<stdio.h>
 #include<string.h>
+#include<unistd.h>
+#include<sys/types.h>
+#include<sys/wait.h>
+#include<stdlib.h>
 
 char *words[50];
 
 void input();
 void print();
+void fork_execution(char *command[3]);
 
 int main(){
+	char *command[3];
+	command[0] = strdup("/bin/ls");
+	//command[1] = strdup("-l");	
+	command[1] = NULL;
+	fork_execution(command);
 	input();
 	return 0;
 }
@@ -46,7 +56,26 @@ void input(){
 void print(){
 	int i = 0;
 	printf("The list of saved tokens is: \n");
-	while(words[i]! = NULL){
+	while(words[i]!= NULL){
 		printf("\"%s\"\n",words[i++]);
+	}
+}
+
+void fork_execution(char *command[3]){
+	pid_t pid;
+
+	pid = fork();
+
+	if(pid<0) {
+		fprintf(stderr, "Fork failed.");
+		exit(-1);
+	}
+	else if (pid ==0) {
+		if (execvp(command[0],command) == -1)
+			perror ("Error description");
+	}
+	else {
+		wait(NULL);
+		printf("Child Complete\n");
 	}
 }
