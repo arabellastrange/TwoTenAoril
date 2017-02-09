@@ -1,10 +1,15 @@
 #include<stdio.h>
 #include<string.h>
+#include<unistd.h>
+#include<sys/types.h>
+#include<sys/wait.h>
+#include<stdlib.h>
 
 char *words[50];
 
 void input();
 void print();
+void fork_execution(char *command[]);
 
 int main(){
 	input();
@@ -27,16 +32,19 @@ void input(){
       			token = strtok(NULL, s);
    		}
 		words[i] = NULL;
-		if(strcmp(words[0],"exit") == 0){
-			if(words[1] != NULL){
-				printf("Exit doesn't take any parameters.\n");
-				break;
-			}
-			else{
-				break;
-			}
+		if(words[0]!=NULL){		
+			if(strcmp(words[0],"exit") == 0){
+				if(words[1] != NULL){
+					printf("Exit doesn't take any parameters.\n");
+					break;
+				}
+				else{
+					break;
+				}
+			} 
+			fork_execution(words);
 		}
-		print();
+		//print();
    		printf(">>");
 	}
 }
@@ -46,12 +54,26 @@ void input(){
 void print(){
 	int i = 0;
 	printf("The list of saved tokens is: \n");
-	while(words[i]! = NULL){
+	while(words[i]!= NULL){
 		printf("\"%s\"\n",words[i++]);
 	}
 }
 
-/*CD: We will need to load an external programme using the exec(function) 
-presumbaly by loading them from a file along a predefined path?
-The programme identifies the parameters in a given text and uses them in a method
-If programme is invaild then return Error messages (how to spot bad programme??)*/
+//Creates a new process and runs it
+void fork_execution(char *command[]){
+	pid_t pid;
+
+	pid = fork();
+	if(pid<0) {
+		fprintf(stderr, "Fork failed.");
+		exit(-1);
+	}
+	else if (pid ==0) {
+		execvp(command[0],command);
+		perror (command[0]);
+		exit(0);
+	}
+	else {
+		wait(NULL);
+	}
+}
