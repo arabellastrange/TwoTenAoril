@@ -9,14 +9,9 @@ char *words[50];
 
 void input();
 void print();
-void fork_execution(char *command[3]);
+void fork_execution(char *command[]);
 
 int main(){
-	char *command[3];
-	command[0] = strdup("/bin/ls");
-	//command[1] = strdup("-l");	
-	command[1] = NULL;
-	fork_execution(command);
 	input();
 	return 0;
 }
@@ -46,7 +41,8 @@ void input(){
 				break;
 			}
 		}
-		print();
+		fork_execution(words);
+		//print();
    		printf(">>");
 	}
 }
@@ -61,21 +57,20 @@ void print(){
 	}
 }
 
-void fork_execution(char *command[3]){
+//Creates a new process and runs it
+void fork_execution(char *command[]){
 	pid_t pid;
 
 	pid = fork();
-
 	if(pid<0) {
 		fprintf(stderr, "Fork failed.");
 		exit(-1);
 	}
 	else if (pid ==0) {
-		if (execvp(command[0],command) == -1)
+		if(execvp(command[0],command))
 			perror ("Error description");
 	}
 	else {
 		wait(NULL);
-		printf("Child Complete\n");
 	}
 }
