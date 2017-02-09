@@ -32,16 +32,18 @@ void input(){
       			token = strtok(NULL, s);
    		}
 		words[i] = NULL;
-		if(strcmp(words[0],"exit") == 0){
-			if(words[1] != NULL){
-				printf("Exit doesn't take any parameters.\n");
-				break;
-			}
-			else{
-				break;
-			}
+		if(words[0]!=NULL){		
+			if(strcmp(words[0],"exit") == 0){
+				if(words[1] != NULL){
+					printf("Exit doesn't take any parameters.\n");
+					break;
+				}
+				else{
+					break;
+				}
+			} 
+			fork_execution(words);
 		}
-		fork_execution(words);
 		//print();
    		printf(">>");
 	}
@@ -67,8 +69,9 @@ void fork_execution(char *command[]){
 		exit(-1);
 	}
 	else if (pid ==0) {
-		if(execvp(command[0],command))
-			perror ("Error description");
+		execvp(command[0],command);
+		perror (command[0]);
+		exit(0);
 	}
 	else {
 		wait(NULL);
