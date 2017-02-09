@@ -3,6 +3,8 @@
 
 char *words[50];
 
+
+// Function Declarations
 void input();
 void print();
 
