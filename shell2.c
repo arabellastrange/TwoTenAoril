@@ -25,6 +25,17 @@ void input(){
 	const char s[] = "|><&; \t\n";
 	char *token;
 	int i;
+
+	//print and save path and home directories, set path to home dir
+	char *orgPATH;
+	char *PATH;
+	printf("PATH : %s\n", getenv("PATH"));
+   	printf("HOME : %s\n", getenv("HOME"));
+   	strcpy(orgPATH, getenv("PATH"));
+   	//setenv("PATH", "HOME", 1);
+   	printf("PATH : %s\n", getenv("PATH"));
+   	//end edits here
+
   	printf(">>");
 	while(fgets(str, sizeof(str), stdin) != NULL){
 		i = 0;
