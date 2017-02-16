@@ -7,7 +7,7 @@
 
 char *words[50];
 char *orgPATH;
-
+char *PATH;
 // Function Declarations
 void input();
 void print();
@@ -17,9 +17,10 @@ void myExit(int flag);
 
 int main(){
 	orgPATH=strdup(getenv("PATH"));	
+	PATH = strdup(orgPATH);
 	input();   	
-	setenv("PATH", orgPATH, 1);
-	printf("PATH : %s\n", orgPATH);
+	printf("PATH : %s\n", PATH);
+	setenv("PATH", orgPATH, 1);	
 	return 0;
 }
 
@@ -45,15 +46,14 @@ void input(){
 		if(words[0]!=NULL){		
 			if(strcmp(words[0],"exit") == 0){
 				if(words[1] != NULL){
-					
 					printf("Exit doesn't take any parameters.\n");
-					break;
 				}
 				else{
 					
 					break;
 				}
-			} 
+			}
+			else 
 			if(strcmp(words[0],"setpath") == 0)
 				if(words[1] != NULL && words[2]==NULL){
 					change_path(words[1]);
@@ -109,6 +109,7 @@ void fork_execution(char *command[]){
 
 void change_path(char *path){
 	setenv("PATH", path , 1);
+	PATH=strdup(getenv("PATH"));
    	printf("PATH : %s\n", getenv("PATH"));
 }
 
