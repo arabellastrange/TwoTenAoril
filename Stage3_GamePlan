@@ -1,0 +1,9 @@
+Hey all as agreed upon this is outline for the work you are going to do for stage three
+>> set home directory to defualt PATH [done]
+>> print PATH [done]
+>> change PATH
+>> restore PATH
+
+These can be built on the pre-exisiting functions getnv() and setnv()
+
+For now we will use a simple text file to store the edited PATH but should begin to consider a small databases which would hold both PATH and command history

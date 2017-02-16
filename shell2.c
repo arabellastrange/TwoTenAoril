@@ -6,13 +6,19 @@
 #include<stdlib.h>
 
 char *words[50];
+char *orgPATH;
 
+// Function Declarations
 void input();
 void print();
 void fork_execution(char *command[]);
+void change_path(char *path);
+void myExit(int flag);
 
 int main(){
-	input();
+	orgPATH=strdup(getenv("PATH"));	
+	input();   	
+	setenv("PATH", orgPATH, 1);
 	return 0;
 }
 
@@ -23,6 +29,9 @@ void input(){
 	const char s[] = "|><&; \t\n";
 	char *token;
 	int i;
+
+	chdir(getenv("HOME"));	
+
   	printf(">>");
 	while(fgets(str, sizeof(str), stdin) != NULL){
 		i = 0;
@@ -42,7 +51,10 @@ void input(){
 					break;
 				}
 			} 
-			fork_execution(words);
+			if(strcmp(words[0],"setpath")==0)
+				change_path(words[1]);
+			else							
+				fork_execution(words);
 		}
 		//print();
    		printf(">>");
@@ -66,14 +78,27 @@ void fork_execution(char *command[]){
 	pid = fork();
 	if(pid<0) {
 		fprintf(stderr, "Fork failed.");
-		exit(-1);
+		myExit(-1);
 	}
 	else if (pid ==0) {
 		execvp(command[0],command);
 		perror (command[0]);
-		exit(0);
+		myExit(0);
 	}
 	else {
 		wait(NULL);
 	}
 }
+
+
+void change_path(char *path){
+	setenv("PATH", path , 1);
+   	printf("PATH : %s\n", getenv("PATH"));
+}
+
+
+void myExit(int flag){ 
+	setenv("PATH", orgPATH, 1);
+	printf("PATH : %s\n", getenv("PATH"));
+	exit(flag);
+} 
