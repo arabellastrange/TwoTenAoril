@@ -137,12 +137,17 @@ void change_path(char *path){
 
 //takes in directory as input and sets the programme directory to it
 void change_directory(char *directory){
-	chdir(directory);
+	if(strcmp(directory, "~") == 0){
+		//go home
+		chdir(getenv("HOME"));
+	}
+	else{
+		chdir(directory);
+	}
 }
 
 // restores the original path and exits
 void my_exit(int flag){ 
 	setenv("PATH", orgPATH, 1);
-	//printf("PATH : %s\n", getenv("PATH"));
 	exit(flag);
 } 
