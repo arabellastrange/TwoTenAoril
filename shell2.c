@@ -8,15 +8,18 @@
 char *words[50];
 char *orgPATH;
 char *PATH;
+
 // Function Declarations
 void input();
 void print();
 void fork_execution(char *command[]);
 void change_path(char *path);
-void myExit(int flag);
+void change_directory(char *directory);
+void my_exit(int flag); 
 
+// main function calls input method, saves and restores the user path
 int main(){
-	orgPATH=strdup(getenv("PATH"));	
+	orgPATH = strdup(getenv("PATH"));	
 	PATH = strdup(orgPATH);
 	input();   	
 	printf("PATH : %s\n", PATH);
@@ -32,6 +35,7 @@ void input(){
 	char *token;
 	int i;
 
+	//start programme by setting the defualt directory to the home directory
 	chdir(getenv("HOME"));	
 
   	printf(">>");
@@ -53,22 +57,40 @@ void input(){
 					break;
 				}
 			}
-			else 
-			if(strcmp(words[0],"setpath") == 0)
+
+			else if(strcmp(words[0],"setpath") == 0){
 				if(words[1] != NULL && words[2]==NULL){
 					change_path(words[1]);
 				}
-				else{
-					printf("setpath accepts only one parameter.\n");				
+				else if(words[1] == NULL){
+					printf("setpath needs a parameter.\n");				
 				}
-			else if(strcmp(words[0],"getpath") == 0)
+				else{
+					printf("setpath only takes one parameter \n");
+				}
+			}
+
+			else if(strcmp(words[0],"getpath") == 0){
 				if(words[1] == NULL){
 					printf("PATH : %s\n",getenv("PATH"));
 				}
 				else{
 					printf("getpath doesn't take a parameter.\n");				
 				}
- 
+			}
+
+ 			else if(strcmp(words[0], "cd") == 0){
+ 				if(words[1] != NULL){
+ 					change_directory(words[1]);
+ 				}
+ 				else if(words[1] == NULL){
+ 					printf("cd needs a parameter\n");
+ 				}
+ 				else{
+ 					printf("cd only takes one parameter\n");
+ 				}
+ 			}
+
 			else							
 				fork_execution(words);
 		}
@@ -94,28 +116,38 @@ void fork_execution(char *command[]){
 	pid = fork();
 	if(pid<0) {
 		fprintf(stderr, "Fork failed.");
-		myExit(-1);
+		my_exit(-1);
 	}
 	else if (pid ==0) {
 		execvp(command[0],command);
 		perror (command[0]);
-		myExit(0);
+		my_exit(0);
 	}
 	else {
 		wait(NULL);
 	}
 }
 
-
+//takes in a path as input from user and sets the shell's path to that input
 void change_path(char *path){
 	setenv("PATH", path , 1);
 	PATH=strdup(getenv("PATH"));
    	printf("PATH : %s\n", getenv("PATH"));
 }
 
+//takes in directory as input and sets the programme directory to it
+void change_directory(char *directory){
+	if(strcmp(directory, "~") == 0){
+		//go home
+		chdir(getenv("HOME"));
+	}
+	else{
+		chdir(directory);
+	}
+}
 
-void myExit(int flag){ 
+// restores the original path and exits
+void my_exit(int flag){ 
 	setenv("PATH", orgPATH, 1);
-	//printf("PATH : %s\n", getenv("PATH"));
 	exit(flag);
 } 
