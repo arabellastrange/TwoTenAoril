@@ -15,15 +15,15 @@ void print();
 void fork_execution(char *command[]);
 void change_path(char *path);
 void change_directory(char *directory);
-void my_exit(int flag); 
+void my_exit(int flag);
 
 // main function calls input method, saves and restores the user path
 int main(){
-	orgPATH = strdup(getenv("PATH"));	
+	orgPATH = strdup(getenv("PATH"));
 	PATH = strdup(orgPATH);
-	input();   	
+	input();
 	printf("PATH : %s\n", PATH);
-	setenv("PATH", orgPATH, 1);	
+	setenv("PATH", orgPATH, 1);
 	return 0;
 }
 
@@ -36,7 +36,7 @@ void input(){
 	int i;
 
 	//start programme by setting the defualt directory to the home directory
-	chdir(getenv("HOME"));	
+	chdir(getenv("HOME"));
 
   	printf(">>");
 	while(fgets(str, sizeof(str), stdin) != NULL){
@@ -47,13 +47,13 @@ void input(){
       			token = strtok(NULL, s);
    		}
 		words[i] = NULL;
-		if(words[0]!=NULL){		
+		if(words[0]!=NULL){
 			if(strcmp(words[0],"exit") == 0){
 				if(words[1] != NULL){
 					printf("Exit doesn't take any parameters.\n");
 				}
 				else{
-					
+
 					break;
 				}
 			}
@@ -63,7 +63,7 @@ void input(){
 					change_path(words[1]);
 				}
 				else if(words[1] == NULL){
-					printf("setpath needs a parameter.\n");				
+					printf("setpath needs a parameter.\n");
 				}
 				else{
 					printf("setpath only takes one parameter \n");
@@ -75,12 +75,12 @@ void input(){
 					printf("PATH : %s\n",getenv("PATH"));
 				}
 				else{
-					printf("getpath doesn't take a parameter.\n");				
+					printf("getpath doesn't take a parameter.\n");
 				}
 			}
 
  			else if(strcmp(words[0], "cd") == 0){
- 				if(words[1] != NULL){
+ 				if(words[1] != NULL && words[2]==NULL){
  					change_directory(words[1]);
  				}
  				else if(words[1] == NULL){
@@ -91,7 +91,7 @@ void input(){
  				}
  			}
 
-			else							
+			else
 				fork_execution(words);
 		}
 		//print();
@@ -147,7 +147,7 @@ void change_directory(char *directory){
 }
 
 // restores the original path and exits
-void my_exit(int flag){ 
+void my_exit(int flag){
 	setenv("PATH", orgPATH, 1);
 	exit(flag);
-} 
+}
