@@ -8,6 +8,11 @@
 char *words[50];
 char *orgPATH;
 char *PATH;
+int next_store,history_count;
+struct command_history{
+	char input_string[512];
+	int history_number; //integer to track the number of the command
+}history[20];
 
 // Function Declarations
 void input();
@@ -15,12 +20,18 @@ void print();
 void fork_execution(char *command[]);
 void change_path(char *path);
 void change_directory(char *directory);
+void get_command(char* command);
+void get_command_minus(char* command);
 void my_exit(int flag);
+void store(char* command);
+void print_history();
 
 // main function calls input method, saves and restores the user path
 int main(){
 	orgPATH = strdup(getenv("PATH"));
 	PATH = strdup(orgPATH);
+	next_store=0;
+	history_count=1;
 	input();
 	printf("PATH : %s\n", PATH);
 	setenv("PATH", orgPATH, 1);
@@ -40,6 +51,7 @@ void input(){
 
   	printf(">>");
 	while(fgets(str, sizeof(str), stdin) != NULL){
+		store(str);
 		i = 0;
 		token = strtok(str, s);
    		while( token != NULL ) {
@@ -90,8 +102,26 @@ void input(){
  					printf("cd only takes one parameter\n");
  				}
  			}
-
-			else
+			else if(words[0][0] == '!'){
+				if(words[0][1] != '\0' && words[0][1] != '-'){
+					char parameter[2];
+					strcpy(parameter,words[0]+1);
+					printf("parameter string is %s\n",parameter);
+					get_command(parameter);				
+				}
+				else if(words[0][1] != '\0' && words[0][1]== '-' && words[0][2] != '\0'){
+					char parameter[2];
+					strcpy(parameter,words[0]+2);
+					printf("parameter string is %s\n",parameter);
+					get_command_minus(parameter);
+ 				}
+ 				else{
+ 					printf("! needs an input \n");
+ 				}
+			}
+			else if(strcmp(words[0],"history")==0 && words[1]==NULL)
+				print_history();
+			else 
 				fork_execution(words);
 		}
 		//print();
@@ -146,8 +176,38 @@ void change_directory(char *directory){
 	}
 }
 
+void get_command(char* command){
+	if(strcmp(command,"!")!=0){
+		printf("get back the command at number %s\n", command);
+		//printf("%s", history[command].input_string);
+	}
+	else if(strcmp(command,"!")==0){
+		printf("get previous command\n");
+	}
+	else{
+		printf("that is not a valid input for !\n");	
+	}
+}
+
+void get_command_minus(char* command){
+	printf("get back the command previous to this one by %s commands\n", command);
+}
+
 // restores the original path and exits
 void my_exit(int flag){
 	setenv("PATH", orgPATH, 1);
 	exit(flag);
+}
+
+void store(char* command){
+	if(command[0]!='!'){
+		strcpy(history[next_store].input_string,command);
+		history[next_store].history_number=history_count++;
+		next_store=(next_store+1)%20;
+	}
+}
+
+void print_history(){
+	for(int i=0;i<history_count && i<20;i++)
+		printf("%d %s",history[i].history_number,history[i].input_string);
 }
