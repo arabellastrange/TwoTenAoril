@@ -25,6 +25,8 @@ void get_command_minus(char* command);
 void my_exit(int flag);
 void store(char* command);
 void print_history();
+void save_history_to_file();
+
 
 // main function calls input method, saves and restores the user path
 int main(){
@@ -208,6 +210,29 @@ void store(char* command){
 }
 
 void print_history(){
-	for(int i=0;i<history_count && i<20;i++)
+	for(int i=0;i<history_count && i<20;i++) {
 		printf("%d %s",history[i].history_number,history[i].input_string);
+	}
+	save_history_to_file();
+}
+
+
+/*
+	Questions:
+		Does the file ever empty?
+		Does it loop back to the start of the file and re write the items alrady stored.
+	Problem
+		This needs to know how many items are in the array.
+*/
+void save_history_to_file() {
+	FILE *fp;
+
+   	fp = fopen("prev_commands.txt", "w+");
+
+	for(int i = 0; i < 20; i++) {
+		// For each item in the history, add it the the file.
+		fprintf(fp, "%d:%s", history[i].history_number, history[i].input_string);
+	}
+	printf("History saved to file.");
+	fclose(fp);
 }
