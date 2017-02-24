@@ -250,41 +250,21 @@ void save_history_to_file() {
 		Gettin the history number and the actual command seperated.
 */
 void load_saved_history() {
-	FILE *fp;
+	FILE 	*fp;
+	int 	history_number;
+	char 	history_command[512];	
 
 	fp = fopen("prev_commands.txt", "r");
 
 	for(int i = 0; i < 20; i++) {
-		// Check to see if we are at the end of the file.
-		history[i].history_number =;	 // The history number from the file.
-		history[i].input_string =;		 // Input from the file.
+		char command_from_file[512];
+
+		// Load the string from the file into a temp string.
+		fscanf(fp, "%s", command_from_file);
+
+		// Seprate the string into the two sections.
+		history_number = (int)strtok(command_from_file, ":");
 	}
 	
 	fclose(fp);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
