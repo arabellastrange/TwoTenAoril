@@ -9,6 +9,7 @@ char *words[50];
 char *orgPATH;
 char *PATH;
 int next_store,history_count;
+
 struct command_history{
 	char input_string[512];
 	int history_number; //integer to track the number of the command
@@ -27,6 +28,8 @@ void store(char* command);
 void print_history();
 void tokenize(char *line);
 void runCommand();
+void save_history_to_file(); 
+void load_saved_history();
 
 // main function calls input method, saves and restores the user path
 int main(){
@@ -216,6 +219,50 @@ void store(char* command){
 }
 
 void print_history(){
-	for(int i=0;i<history_count && i<20;i++)
+	for(int i=0;i<history_count && i<20;i++){
 		printf("%d %s",history[i].history_number,history[i].input_string);
+	}
+	save_history_to_file();
+}
+
+/* 	Questions: 		
+		Does the file ever empty? 		
+		Does it loop back to the start of the file and re write the items alrady stored. 	 Problem 		
+		This needs to know how many items are in the array. 
+*/ 
+void save_history_to_file() { 	
+	FILE *fp;    	
+	fp = fopen("prev_commands.txt", "w+"); 	
+	for(int i = 0; i < 20; i++) { 		
+		// For each item in the history, add it the the file. 		
+		fprintf(fp, "%d:%s", history[i].history_number, history[i].input_string); 	
+	} 	
+	printf("History saved to file.");
+ 	fclose(fp); 
+} 
+
+/* 	
+	Load the saved history in the file to the history array. 
+
+	Problems 	
+		Gettin the history number and the actual command seperated. 
+*/ 
+void load_saved_history() { 
+	FILE *fp;
+ 	int history_number;
+ 	char history_command[512];
+
+	fp = fopen("prev_commands.txt", "r"); 	
+
+	for(int i = 0; i < 20; i++) { 		
+		char command_from_file[512]; 
+		
+		// Load the string from the file into a temp string.
+ 		fscanf(fp, "%s", command_from_file);
+ 		
+		// Seprate the string into the two sections.
+ 		history_number = (int)strtok(command_from_file, ":"); 	
+	}
+	
+	fclose(fp); 
 }
