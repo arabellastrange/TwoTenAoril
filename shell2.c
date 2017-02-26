@@ -36,7 +36,7 @@ int main(){
 	orgPATH = strdup(getenv("PATH"));
 	PATH = strdup(orgPATH);
 	next_store=0;
-	history_count=1;
+	history_count=0;
 	input();
 	printf("PATH : %s\n", PATH);
 	setenv("PATH", orgPATH, 1);
@@ -110,13 +110,11 @@ void runCommand(){
 			if(words[0][1] != '\0' && words[0][1] != '-'){
 				char parameter[2];
 				strcpy(parameter,words[0]+1);
-				printf("parameter string is %s\n",parameter);
 				get_command(parameter);				
 			}
 			else if(words[0][1] != '\0' && words[0][1]== '-' && words[0][2] != '\0'){
 				char parameter[2];
 				strcpy(parameter,words[0]+2);
-				printf("parameter string is %s\n",parameter);
 				get_command_minus(parameter);
  			}
  			else{
@@ -188,12 +186,13 @@ void change_directory(char *directory){
 }
 
 void get_command(char* command){
-	if(strcmp(command,"!")!=0){
-		printf("get back the command at number %s\n", command);
-		//printf("%s", history[command].input_string);
+	if(command[0]!='!'){
+		tokenize(history[atoi(command)-1].input_string);
+		runCommand();
 	}
-	else if(strcmp(command,"!")==0){
-		printf("get previous command\n");
+	else if(strcmp(command,"!")==0 && command[1]=='\0'){
+		tokenize(history[history_count-1].input_string);
+		runCommand();
 	}
 	else{
 		printf("that is not a valid input for !\n");	
@@ -201,8 +200,10 @@ void get_command(char* command){
 }
 
 void get_command_minus(char* command){
-	printf("get back the command previous to this one by %s commands\n", command);
+	tokenize(history[history_count-atoi(command)].input_string);
+	runCommand();
 }
+
 
 // restores the original path and exits
 void my_exit(int flag){
@@ -214,6 +215,7 @@ void store(char* command){
 	if(command[0]!='!'){
 		strcpy(history[next_store].input_string,command);
 		history[next_store].history_number=history_count++;
+		//history_count++;
 		next_store=(next_store+1)%20;
 	}
 }
@@ -261,7 +263,7 @@ void load_saved_history() {
  		fscanf(fp, "%s", command_from_file);
  		
 		// Seprate the string into the two sections.
- 		history_number = (int)strtok(command_from_file, ":"); 	
+ 		history_number = atoi(strtok(command_from_file, ":")); 	
 	}
 	
 	fclose(fp); 
