@@ -9,7 +9,6 @@ char *words[50];
 char *orgPATH;
 char *PATH;
 int next_store,history_count;
-
 struct command_history{
 	char input_string[512];
 	int history_number; //integer to track the number of the command
@@ -48,10 +47,8 @@ int main(){
 void input(){
 	char str[512];
 	
-
 	//start programme by setting the defualt directory to the home directory
 	chdir(getenv("HOME"));
-
   	printf(">>");
 	while(fgets(str, sizeof(str), stdin) != NULL){
 		store(str);
@@ -62,7 +59,6 @@ void input(){
 					printf("Exit doesn't take any parameters.\n");
 				}
 				else{
-
 					break;
 				}
 			}
@@ -73,8 +69,7 @@ void input(){
    		printf(">>");
 	}
 }
-
-
+//call the appropriate method depending on user input
 void runCommand(){
 	if(strcmp(words[0],"setpath") == 0){
 			if(words[1] != NULL && words[2]==NULL){
@@ -96,7 +91,7 @@ void runCommand(){
 			}
 		}
  		else if(strcmp(words[0], "cd") == 0){
- 			if(words[1] != NULL && words[2]==NULL){
+ 			if(words[1] != NULL && words[2] == NULL){
  				change_directory(words[1]);
  			}
  			else if(words[1] == NULL){
@@ -112,7 +107,7 @@ void runCommand(){
 				strcpy(parameter,words[0]+1);
 				get_command(parameter);				
 			}
-			else if(words[0][1] != '\0' && words[0][1]== '-' && words[0][2] != '\0'){
+			else if(words[0][1] != '\0' && words[0][1] == '-' && words[0][2] != '\0'){
 				char parameter[2];
 				strcpy(parameter,words[0]+2);
 				get_command_minus(parameter);
@@ -121,12 +116,13 @@ void runCommand(){
  				printf("! needs an input \n");
  			}
 		}
-		else if(strcmp(words[0],"history")==0 && words[1]==NULL)
+		else if(strcmp(words[0],"history")==0 && words[1] == NULL)
 			print_history();
 		else 
 			fork_execution(words);
 }
 
+//break user input into tokens at the space (or other specified symbols)
 void tokenize(char* line){
 	const char s[] = "|><&; \t\n";
 	char *token;
@@ -151,7 +147,6 @@ void print(){
 //Creates a new process and runs it
 void fork_execution(char *command[]){
 	pid_t pid;
-
 	pid = fork();
 	if(pid<0) {
 		fprintf(stderr, "Fork failed.");
@@ -185,6 +180,7 @@ void change_directory(char *directory){
 	}
 }
 
+//call command from history by number
 void get_command(char* command){
 	if(command[0]!='!'){
 		tokenize(history[atoi(command)-1].input_string);
@@ -199,11 +195,11 @@ void get_command(char* command){
 	}
 }
 
+//call command from histoy relative to current position
 void get_command_minus(char* command){
 	tokenize(history[history_count-atoi(command)].input_string);
 	runCommand();
 }
-
 
 // restores the original path and exits
 void my_exit(int flag){
@@ -211,6 +207,7 @@ void my_exit(int flag){
 	exit(flag);
 }
 
+//store the user input in history
 void store(char* command){
 	if(command[0]!='!'){
 		strcpy(history[next_store].input_string,command);
@@ -220,6 +217,7 @@ void store(char* command){
 	}
 }
 
+//print saved history
 void print_history(){
 	for(int i=0;i<history_count && i<20;i++){
 		printf("%d %s",history[i].history_number,history[i].input_string);
@@ -245,7 +243,6 @@ void save_history_to_file() {
 
 /* 	
 	Load the saved history in the file to the history array. 
-
 	Problems 	
 		Gettin the history number and the actual command seperated. 
 */ 
@@ -253,9 +250,7 @@ void load_saved_history() {
 	FILE *fp;
  	int history_number;
  	char history_command[512];
-
 	fp = fopen("prev_commands.txt", "r"); 	
-
 	for(int i = 0; i < 20; i++) { 		
 		char command_from_file[512]; 
 		
