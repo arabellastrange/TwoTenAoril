@@ -26,7 +26,13 @@ void get_command_minus(char* command);
 void my_exit(int flag);
 void store(char* command);
 void print_history();
+<<<<<<< HEAD
 void save_history_to_file();
+=======
+void tokenize(char *line);
+void runCommand();
+void save_history_to_file(); 
+>>>>>>> 82ebcc13f52c8c7274245add43b1b5a8e43f0bfd
 void load_saved_history();
 
 // main function calls input method, saves and restores the user path
@@ -35,7 +41,7 @@ int main()
 	orgPATH = strdup(getenv("PATH"));
 	PATH = strdup(orgPATH);
 	next_store=0;
-	history_count=1;
+	history_count=0;
 	input();
 	printf("PATH : %s\n", PATH);
 	setenv("PATH", orgPATH, 1);
@@ -44,6 +50,7 @@ int main()
 
 //Gets a line and separates it into tokens which are saved in a pointer array
 //It stops when the word 'exit' is given as input or when ctrl+D is pressed
+<<<<<<< HEAD
 void input()
 {
 	char 		str[512];
@@ -51,13 +58,18 @@ void input()
 	char 		*token;
 	int 		i;
 
+=======
+void input(){
+	char str[512];
+	
+>>>>>>> 82ebcc13f52c8c7274245add43b1b5a8e43f0bfd
 	//start programme by setting the defualt directory to the home directory
 	chdir(getenv("HOME"));
-
   	printf(">>");
 
 	while(fgets(str, sizeof(str), stdin) != NULL) {
 		store(str);
+<<<<<<< HEAD
 		i = 0;
 		token = strtok(str, s);
 
@@ -74,10 +86,27 @@ void input()
 				}
 				else {
 
+=======
+		tokenize(str);
+		if(words[0]!=NULL){
+			if(strcmp(words[0],"exit") == 0){
+				if(words[1] != NULL){
+					printf("Exit doesn't take any parameters.\n");
+				}
+				else{
+>>>>>>> 82ebcc13f52c8c7274245add43b1b5a8e43f0bfd
 					break;
 				}
 			}
+		else
+			runCommand();			
+		}
+		//print();
+   		printf(">>");
+	}
+}
 
+<<<<<<< HEAD
 			else if(strcmp(words[0],"setpath") == 0) {
 				if(words[1] != NULL && words[2]==NULL) {
 					change_path(words[1]);
@@ -126,17 +155,73 @@ void input()
  				else {
  					printf("! needs an input \n");
  				}
+=======
+//call the appropriate method depending on user input
+void runCommand(){
+	if(strcmp(words[0],"setpath") == 0){
+			if(words[1] != NULL && words[2]==NULL){
+				change_path(words[1]);
 			}
-			else if(strcmp(words[0],"history")==0 && words[1]==NULL)
-				print_history();
-			else 
-				fork_execution(words);
+			else if(words[1] == NULL){
+				printf("setpath needs a parameter.\n");
+			}
+			else{
+				printf("setpath only takes one parameter \n");
+			}
 		}
-		//print();
-   		printf(">>");
-	}
+		else if(strcmp(words[0],"getpath") == 0){
+			if(words[1] == NULL){
+				printf("PATH : %s\n",getenv("PATH"));
+			}
+			else{
+				printf("getpath doesn't take a parameter.\n");
+			}
+		}
+ 		else if(strcmp(words[0], "cd") == 0){
+ 			if(words[1] != NULL && words[2] == NULL){
+ 				change_directory(words[1]);
+ 			}
+ 			else if(words[1] == NULL){
+ 				printf("cd needs a parameter\n");
+ 			}
+ 			else{
+ 				printf("cd only takes one parameter\n");
+ 			}
+ 		}
+		else if(words[0][0] == '!'){
+			if(words[0][1] != '\0' && words[0][1] != '-'){
+				char parameter[2];
+				strcpy(parameter,words[0]+1);
+				get_command(parameter);				
+>>>>>>> 82ebcc13f52c8c7274245add43b1b5a8e43f0bfd
+			}
+			else if(words[0][1] != '\0' && words[0][1] == '-' && words[0][2] != '\0'){
+				char parameter[2];
+				strcpy(parameter,words[0]+2);
+				get_command_minus(parameter);
+ 			}
+ 			else{
+ 				printf("! needs an input \n");
+ 			}
+		}
+		else if(strcmp(words[0],"history")==0 && words[1] == NULL)
+			print_history();
+		else 
+			fork_execution(words);
 }
 
+//break user input into tokens at the space (or other specified symbols)
+void tokenize(char* line){
+	const char s[] = "|><&; \t\n";
+	char *token;
+	int i = 0;
+	token = strtok(line, s);
+   	while( token != NULL ) {
+      		words[i++] = strdup(token);
+      		token = strtok(NULL, s);
+   	}
+	words[i] = NULL;
+}
 
 //Print the content of the pointer array
 void print() { 
@@ -150,7 +235,6 @@ void print() {
 //Creates a new process and runs it
 void fork_execution(char *command[]) {
 	pid_t pid;
-
 	pid = fork();
 	if(pid<0) {
 		fprintf(stderr, "Fork failed.");
@@ -184,6 +268,7 @@ void change_directory(char *directory) {
 	}
 }
 
+<<<<<<< HEAD
 void get_command(char* command) {
 	if(strcmp(command,"!")!=0) {
 		printf("get back the command at number %s\n", command);
@@ -191,14 +276,32 @@ void get_command(char* command) {
 	}
 	else if(strcmp(command,"!")==0) {
 		printf("get previous command\n");
+=======
+//call command from history by number
+void get_command(char* command){
+	if(command[0]!='!'){
+		tokenize(history[atoi(command)-1].input_string);
+		runCommand();
+	}
+	else if(strcmp(command,"!")==0 && command[1]=='\0'){
+		tokenize(history[history_count-1].input_string);
+		runCommand();
+>>>>>>> 82ebcc13f52c8c7274245add43b1b5a8e43f0bfd
 	}
 	else {
 		printf("that is not a valid input for !\n");	
 	}
 }
 
+<<<<<<< HEAD
 void get_command_minus(char* command) {
 	printf("get back the command previous to this one by %s commands\n", command);
+=======
+//call command from histoy relative to current position
+void get_command_minus(char* command){
+	tokenize(history[history_count-atoi(command)].input_string);
+	runCommand();
+>>>>>>> 82ebcc13f52c8c7274245add43b1b5a8e43f0bfd
 }
 
 // restores the original path and exits
@@ -207,14 +310,21 @@ void my_exit(int flag) {
 	exit(flag);
 }
 
+<<<<<<< HEAD
 void store(char* command) {
+=======
+//store the user input in history
+void store(char* command){
+>>>>>>> 82ebcc13f52c8c7274245add43b1b5a8e43f0bfd
 	if(command[0]!='!'){
 		strcpy(history[next_store].input_string,command);
 		history[next_store].history_number=history_count++;
+		//history_count++;
 		next_store=(next_store+1)%20;
 	}
 }
 
+<<<<<<< HEAD
 void print_history() {
 	for(int i=0;i<history_count && i<20;i++) {
 		printf("%d %s",history[i].history_number,history[i].input_string);
@@ -267,4 +377,51 @@ void load_saved_history() {
 	}
 	
 	fclose(fp);
+=======
+//print saved history
+void print_history(){
+	for(int i=0;i<history_count && i<20;i++){
+		printf("%d %s",history[i].history_number,history[i].input_string);
+	}
+	save_history_to_file();
+>>>>>>> 82ebcc13f52c8c7274245add43b1b5a8e43f0bfd
+}
+
+/* 	Questions: 		
+		Does the file ever empty? 		
+		Does it loop back to the start of the file and re write the items alrady stored. 	 Problem 		
+		This needs to know how many items are in the array. 
+*/ 
+void save_history_to_file() { 	
+	FILE *fp;    	
+	fp = fopen("prev_commands.txt", "w+"); 	
+	for(int i = 0; i < 20; i++) { 		
+		// For each item in the history, add it the the file. 		
+		fprintf(fp, "%d:%s", history[i].history_number, history[i].input_string); 	
+	} 	
+	printf("History saved to file.");
+ 	fclose(fp); 
+} 
+
+/* 	
+	Load the saved history in the file to the history array. 
+	Problems 	
+		Gettin the history number and the actual command seperated. 
+*/ 
+void load_saved_history() { 
+	FILE *fp;
+ 	int history_number;
+ 	char history_command[512];
+	fp = fopen("prev_commands.txt", "r"); 	
+	for(int i = 0; i < 20; i++) { 		
+		char command_from_file[512]; 
+		
+		// Load the string from the file into a temp string.
+ 		fscanf(fp, "%s", command_from_file);
+ 		
+		// Seprate the string into the two sections.
+ 		history_number = atoi(strtok(command_from_file, ":")); 	
+	}
+	
+	fclose(fp); 
 }
