@@ -56,9 +56,9 @@ void input(){
 	chdir(getenv("HOME"));
   	printf(">>");
 	while(fgets(str, sizeof(str), stdin) != NULL){
-		store(str);
 		tokenize(str);
 		if(words[0]!=NULL){
+			store(str);
 			if(strcmp(words[0],"exit") == 0){
 				if(words[1] != NULL){
 					printf("Exit doesn't take any parameters.\n");

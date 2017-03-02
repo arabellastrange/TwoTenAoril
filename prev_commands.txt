@@ -1,4 +1,1 @@
-1:ls
-2:pwd
-3:history
-4:ls -l
+1:history2:ls3:history
