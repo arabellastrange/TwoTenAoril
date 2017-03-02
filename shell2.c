@@ -5,6 +5,7 @@
 #include<sys/wait.h>
 #include<stdlib.h>
 
+FILE *fp;
 char *words[50];
 char *orgPATH;
 char *PATH;
@@ -13,7 +14,7 @@ struct command_history{
 	char input_string[512];
 	int history_number; //integer to track the number of the command
 }history[20];
-
+    	
 // Function Declarations
 void input();
 void print();
@@ -27,18 +28,22 @@ void store(char* command);
 void print_history();
 void tokenize(char *line);
 void runCommand();
-void save_history_to_file(); 
+void save_history_to_file(char *command); 
 void load_saved_history();
 
 // main function calls input method, saves and restores the user path
 int main(){
-	orgPATH = strdup(getenv("PATH"));
-	PATH = strdup(orgPATH);
 	next_store=0;
-	history_count=0;
+	history_count=0;	
+	load_saved_history();
+	fp = fopen("prev_commands.txt", "a");
+	//print_history(); 	
+	orgPATH = strdup(getenv("PATH"));
+	PATH = strdup(orgPATH);	
 	input();
 	setenv("PATH", orgPATH, 1);
 	printf("PATH : %s\n", getenv("PATH"));	
+ 	fclose(fp);
 	return 0;
 }
 
@@ -184,16 +189,18 @@ void change_directory(char *directory){
 //call command from history by number
 void get_command(char* command){
 	if(command[0]!='!'){
-		if(atoi(command)-1<=history_count){
+		if(atoi(command)-1<history_count){
+			printf("%s",history[atoi(command)-1].input_string);
 			tokenize(history[atoi(command)-1].input_string);
 			runCommand();
 		}
 		else{
-			printf("The number is greater than the number of commands previously executed");
+			printf("The number is greater than the number of commands previously executed\n");
 		}
 	}
 	else if(strcmp(command,"!")==0 && command[1]=='\0')
 		if(history_count>0){
+			printf("%s",history[history_count-1].input_string);
 			tokenize(history[history_count-1].input_string);
 			runCommand();
 		}
@@ -207,8 +214,14 @@ void get_command(char* command){
 
 //call command from histoy relative to current position
 void get_command_minus(char* command){
-	tokenize(history[history_count-atoi(command)].input_string);
-	runCommand();
+	if(history_count-atoi(command)-1>=0){	
+		printf("%s",history[history_count-atoi(command)-1].input_string);	
+		tokenize(history[history_count-atoi(command)-1].input_string);
+		runCommand();
+	}
+	else{
+		printf("Number larger than the number of commands stored.\n");
+	}
 }
 
 // restores the original path and exits
@@ -223,15 +236,15 @@ void store(char* command){
 		strcpy(history[next_store].input_string,command);
 		history[next_store].history_number=history_count++;
 		next_store=(next_store+1)%20;
+		save_history_to_file(command);
 	}
 }
 
 //print saved history
 void print_history(){
 	for(int i=0;i<history_count && i<20;i++){
-		printf("%d %s",history[i].history_number,history[i].input_string);
+		printf("%d %s",history[i].history_number+1,history[i].input_string);
 	}
-	save_history_to_file();
 }
 
 /* 	Questions: 		
@@ -239,15 +252,11 @@ void print_history(){
 		Does it loop back to the start of the file and re write the items alrady stored. 	 Problem 		
 		This needs to know how many items are in the array. 
 */ 
-void save_history_to_file() { 	
-	FILE *fp;    	
-	fp = fopen("prev_commands.txt", "w+"); 	
-	for(int i = 0; i < 20; i++) { 		
+void save_history_to_file(char *command) { 	
+		 		
 		// For each item in the history, add it the the file. 		
-		fprintf(fp, "%d:%s", history[i].history_number, history[i].input_string); 	
-	} 	
-	printf("History saved to file.");
- 	fclose(fp); 
+		fprintf(fp, "%d:%s", history_count, command); 	
+ 
 } 
 
 /* 	
@@ -256,18 +265,15 @@ void save_history_to_file() {
 		Gettin the history number and the actual command seperated. 
 */ 
 void load_saved_history() { 
-	FILE *fp;
- 	int history_number;
- 	char history_command[512];
 	fp = fopen("prev_commands.txt", "r"); 	
-	for(int i = 0; i < 20; i++) { 		
-		char command_from_file[512]; 
+	char command_from_file[512];	
+	while(fgets(command_from_file,sizeof command_from_file, fp)!=NULL){	
 		
-		// Load the string from the file into a temp string.
- 		fscanf(fp, "%s", command_from_file);
- 		
 		// Seprate the string into the two sections.
- 		history_number = atoi(strtok(command_from_file, ":")); 	
+ 		history[history_count].history_number = atoi(strtok(command_from_file, ":"));
+		strcpy(history[history_count%20].input_string,strtok(NULL,":"));
+		printf("%d:%s",history[history_count].history_number, history[history_count%20].input_string);
+		history_count++;		
 	}
 	
 	fclose(fp); 
