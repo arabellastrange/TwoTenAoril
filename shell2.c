@@ -37,8 +37,8 @@ int main(){
 	next_store=0;
 	history_count=0;
 	input();
-	printf("PATH : %s\n", PATH);
 	setenv("PATH", orgPATH, 1);
+	printf("PATH : %s\n", getenv("PATH"));	
 	return 0;
 }
 
@@ -96,10 +96,10 @@ void runCommand(){
  				change_directory(words[1]);
  			}
  			else if(words[1] == NULL){
- 				printf("cd needs a parameter\n");
+				change_directory("~"); 				
  			}
  			else{
- 				printf("cd only takes one parameter\n");
+ 				printf("cd only takes zero or one parameter\n");
  			}
  		}
 		else if(words[0][0] == '!'){
@@ -173,24 +173,33 @@ void change_path(char *path){
 //takes in directory as input and sets the programme directory to it
 void change_directory(char *directory){
 	if(strcmp(directory, "~") == 0){
-		//go home
 		chdir(getenv("HOME"));
 	}
 	else{
-		chdir(directory);
+		if(chdir(directory)==-1)		
+			perror(directory);
 	}
 }
 
 //call command from history by number
 void get_command(char* command){
 	if(command[0]!='!'){
-		tokenize(history[atoi(command)-1].input_string);
-		runCommand();
+		if(atoi(command)-1<=history_count){
+			tokenize(history[atoi(command)-1].input_string);
+			runCommand();
+		}
+		else{
+			printf("The number is greater than the number of commands previously executed");
+		}
 	}
-	else if(strcmp(command,"!")==0 && command[1]=='\0'){
-		tokenize(history[history_count-1].input_string);
-		runCommand();
-	}
+	else if(strcmp(command,"!")==0 && command[1]=='\0')
+		if(history_count>0){
+			tokenize(history[history_count-1].input_string);
+			runCommand();
+		}
+		else{
+			printf("There's no previous command to be executed.\n");
+		}
 	else{
 		printf("that is not a valid input for !\n");	
 	}
@@ -213,7 +222,6 @@ void store(char* command){
 	if(command[0]!='!'){
 		strcpy(history[next_store].input_string,command);
 		history[next_store].history_number=history_count++;
-		//history_count++;
 		next_store=(next_store+1)%20;
 	}
 }
