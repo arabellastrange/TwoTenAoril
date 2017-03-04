@@ -5,6 +5,7 @@
 #include<sys/wait.h>
 #include<stdlib.h>
 
+FILE *fp;
 char *words[50];
 char *orgPATH;
 char *PATH;
@@ -13,7 +14,7 @@ struct command_history{
 	char input_string[512];
 	int history_number; //integer to track the number of the command
 }history[20];
-
+    	
 // Function Declarations
 void input();
 void print();
@@ -27,33 +28,38 @@ void store(char* command);
 void print_history();
 void tokenize(char *line);
 void runCommand();
-void save_history_to_file(); 
+void save_history_to_file(char *command); 
 void load_saved_history();
 
 // main function calls input method, saves and restores the user path
 int main(){
-	orgPATH = strdup(getenv("PATH"));
-	PATH = strdup(orgPATH);
 	next_store=0;
-	history_count=0;
+	history_count=0;	
+	load_saved_history();
+	fp = fopen("prev_commands.txt", "a");
+	//print_history(); 	
+	orgPATH = strdup(getenv("PATH"));
+	PATH = strdup(orgPATH);	
 	input();
-	printf("PATH : %s\n", PATH);
 	setenv("PATH", orgPATH, 1);
+	printf("PATH : %s\n", getenv("PATH"));	
+ 	fclose(fp);
 	return 0;
 }
 
 //Gets a line and separates it into tokens which are saved in a pointer array
 //It stops when the word 'exit' is given as input or when ctrl+D is pressed
 void input(){
-	char str[512];
+	char str[512],copy[512];
 	
 	//start programme by setting the defualt directory to the home directory
 	chdir(getenv("HOME"));
   	printf(">>");
 	while(fgets(str, sizeof(str), stdin) != NULL){
-		store(str);
+		strcpy(copy,str);
 		tokenize(str);
 		if(words[0]!=NULL){
+			store(strtok(copy,"\n"));
 			if(strcmp(words[0],"exit") == 0){
 				if(words[1] != NULL){
 					printf("Exit doesn't take any parameters.\n");
@@ -69,6 +75,7 @@ void input(){
    		printf(">>");
 	}
 }
+
 //call the appropriate method depending on user input
 void runCommand(){
 	if(strcmp(words[0],"setpath") == 0){
@@ -95,10 +102,10 @@ void runCommand(){
  				change_directory(words[1]);
  			}
  			else if(words[1] == NULL){
- 				printf("cd needs a parameter\n");
+				change_directory("~"); 				
  			}
  			else{
- 				printf("cd only takes one parameter\n");
+ 				printf("cd only takes zero or one parameter\n");
  			}
  		}
 		else if(words[0][0] == '!'){
@@ -172,24 +179,39 @@ void change_path(char *path){
 //takes in directory as input and sets the programme directory to it
 void change_directory(char *directory){
 	if(strcmp(directory, "~") == 0){
-		//go home
 		chdir(getenv("HOME"));
 	}
 	else{
-		chdir(directory);
+		if(chdir(directory)==-1)		
+			perror(directory);
 	}
 }
 
 //call command from history by number
 void get_command(char* command){
 	if(command[0]!='!'){
-		tokenize(history[atoi(command)-1].input_string);
-		runCommand();
+		if((atoi(command)-1<20) && (atoi(command)-1<history_count)) 
+			if(atoi(command)-1>=0){
+				printf("%s\n",history[atoi(command)-1].input_string);
+				tokenize(history[atoi(command)-1].input_string);
+				runCommand();
+			}
+			else{
+				printf("There is no command with number 0.\n");
+			}
+		else{
+			printf("The number is greater than the number of commands previously executed\n");
+		}
 	}
-	else if(strcmp(command,"!")==0 && command[1]=='\0'){
-		tokenize(history[history_count-1].input_string);
-		runCommand();
-	}
+	else if(strcmp(command,"!")==0 && command[1]=='\0')
+		if(history_count>0){
+			printf("%s",history[history_count-1].input_string);
+			tokenize(history[history_count-1].input_string);
+			runCommand();
+		}
+		else{
+			printf("There's no previous command to be executed.\n");
+		}
 	else{
 		printf("that is not a valid input for !\n");	
 	}
@@ -197,8 +219,14 @@ void get_command(char* command){
 
 //call command from histoy relative to current position
 void get_command_minus(char* command){
-	tokenize(history[history_count-atoi(command)].input_string);
-	runCommand();
+	if(history_count-atoi(command)-1>=0){	
+		printf("%s",history[history_count-atoi(command)-1].input_string);	
+		tokenize(history[history_count-atoi(command)-1].input_string);
+		runCommand();
+	}
+	else{
+		printf("Number larger than the number of commands stored.\n");
+	}
 }
 
 // restores the original path and exits
@@ -212,17 +240,16 @@ void store(char* command){
 	if(command[0]!='!'){
 		strcpy(history[next_store].input_string,command);
 		history[next_store].history_number=history_count++;
-		//history_count++;
 		next_store=(next_store+1)%20;
+		save_history_to_file(command);
 	}
 }
 
 //print saved history
 void print_history(){
 	for(int i=0;i<history_count && i<20;i++){
-		printf("%d %s",history[i].history_number,history[i].input_string);
+		printf("%d %s\n",history[i].history_number+1,history[i].input_string);
 	}
-	save_history_to_file();
 }
 
 /* 	Questions: 		
@@ -230,15 +257,11 @@ void print_history(){
 		Does it loop back to the start of the file and re write the items alrady stored. 	 Problem 		
 		This needs to know how many items are in the array. 
 */ 
-void save_history_to_file() { 	
-	FILE *fp;    	
-	fp = fopen("prev_commands.txt", "w+"); 	
-	for(int i = 0; i < 20; i++) { 		
+void save_history_to_file(char *command) { 	
+		 		
 		// For each item in the history, add it the the file. 		
-		fprintf(fp, "%d:%s", history[i].history_number, history[i].input_string); 	
-	} 	
-	printf("History saved to file.");
- 	fclose(fp); 
+		fprintf(fp, "%d:%s\n", history_count, command); 	
+ 
 } 
 
 /* 	
@@ -247,18 +270,16 @@ void save_history_to_file() {
 		Gettin the history number and the actual command seperated. 
 */ 
 void load_saved_history() { 
-	FILE *fp;
- 	int history_number;
- 	char history_command[512];
 	fp = fopen("prev_commands.txt", "r"); 	
-	for(int i = 0; i < 20; i++) { 		
-		char command_from_file[512]; 
+	char command_from_file[512];	
+	while(fgets(command_from_file,sizeof command_from_file, fp)!=NULL){	
 		
-		// Load the string from the file into a temp string.
- 		fscanf(fp, "%s", command_from_file);
- 		
 		// Seprate the string into the two sections.
- 		history_number = atoi(strtok(command_from_file, ":")); 	
+ 		history[next_store%20].history_number = atoi(strtok(command_from_file, ":\n"))-1;
+		strcpy(history[next_store%20].input_string,strtok(NULL,":\n"));
+		printf("%d:%s\n",history[next_store%20].history_number+1, history[next_store%20].input_string);
+		next_store++;		
+		history_count++;		
 	}
 	
 	fclose(fp); 
