@@ -50,15 +50,16 @@ int main(){
 //Gets a line and separates it into tokens which are saved in a pointer array
 //It stops when the word 'exit' is given as input or when ctrl+D is pressed
 void input(){
-	char str[512];
+	char str[512],copy[512];
 	
 	//start programme by setting the defualt directory to the home directory
 	chdir(getenv("HOME"));
   	printf(">>");
 	while(fgets(str, sizeof(str), stdin) != NULL){
+		strcpy(copy,str);
 		tokenize(str);
 		if(words[0]!=NULL){
-			store(str);
+			store(strtok(copy,"\n"));
 			if(strcmp(words[0],"exit") == 0){
 				if(words[1] != NULL){
 					printf("Exit doesn't take any parameters.\n");
@@ -189,11 +190,15 @@ void change_directory(char *directory){
 //call command from history by number
 void get_command(char* command){
 	if(command[0]!='!'){
-		if(atoi(command)-1<history_count){
-			printf("%s",history[atoi(command)-1].input_string);
-			tokenize(history[atoi(command)-1].input_string);
-			runCommand();
-		}
+		if((atoi(command)-1<20) && (atoi(command)-1<history_count)) 
+			if(atoi(command)-1>=0){
+				printf("%s\n",history[atoi(command)-1].input_string);
+				tokenize(history[atoi(command)-1].input_string);
+				runCommand();
+			}
+			else{
+				printf("There is no command with number 0.\n");
+			}
 		else{
 			printf("The number is greater than the number of commands previously executed\n");
 		}
@@ -243,7 +248,7 @@ void store(char* command){
 //print saved history
 void print_history(){
 	for(int i=0;i<history_count && i<20;i++){
-		printf("%d %s",history[i].history_number+1,history[i].input_string);
+		printf("%d %s\n",history[i].history_number+1,history[i].input_string);
 	}
 }
 
@@ -255,7 +260,7 @@ void print_history(){
 void save_history_to_file(char *command) { 	
 		 		
 		// For each item in the history, add it the the file. 		
-		fprintf(fp, "%d:%s", history_count, command); 	
+		fprintf(fp, "%d:%s\n", history_count, command); 	
  
 } 
 
@@ -270,9 +275,10 @@ void load_saved_history() {
 	while(fgets(command_from_file,sizeof command_from_file, fp)!=NULL){	
 		
 		// Seprate the string into the two sections.
- 		history[history_count].history_number = atoi(strtok(command_from_file, ":"));
-		strcpy(history[history_count%20].input_string,strtok(NULL,":"));
-		printf("%d:%s",history[history_count].history_number, history[history_count%20].input_string);
+ 		history[next_store%20].history_number = atoi(strtok(command_from_file, ":\n"))-1;
+		strcpy(history[next_store%20].input_string,strtok(NULL,":\n"));
+		printf("%d:%s\n",history[next_store%20].history_number+1, history[next_store%20].input_string);
+		next_store++;		
 		history_count++;		
 	}
 	
