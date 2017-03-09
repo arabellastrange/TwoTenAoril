@@ -123,8 +123,13 @@ void runCommand(){
  				printf("! needs an input \n");
  			}
 		}
-		else if(strcmp(words[0],"history")==0 && words[1] == NULL)
-			print_history();
+		else if(strcmp(words[0],"history")==0)
+			if(words[1]==NULL){
+				print_history();
+			}
+			else {
+				printf("history doesn't take any parameters.\n");
+			}
 		else
 			fork_execution(words);
 }
@@ -189,11 +194,13 @@ void change_directory(char *directory){
 
 //call command from history by number
 void get_command(char* command){
+	char copy[512];
 	if(command[0]!='!'){
 		if((atoi(command)-1<20) && (atoi(command)-1<history_count))
 			if(atoi(command)-1>=0){
-				printf("%s\n",history[atoi(command)-1].input_string);
-				tokenize(history[atoi(command)-1].input_string);
+			//	printf("%s\n",history[atoi(command)-1].input_string);
+				strcpy(copy,history[atoi(command)-1].input_string);
+				tokenize(copy);
 				runCommand();
 			}
 			else{
@@ -205,8 +212,9 @@ void get_command(char* command){
 	}
 	else if(strcmp(command,"!")==0 && command[1]=='\0')
 		if(history_count>0){
-			printf("%s",history[history_count-1].input_string);
-			tokenize(history[history_count-1].input_string);
+		//	printf("%s\n",history[(history_count-1)%20].input_string);
+			strcpy(copy,history[(history_count-1)%20].input_string);
+			tokenize(copy);
 			runCommand();
 		}
 		else{
@@ -219,9 +227,11 @@ void get_command(char* command){
 
 //call command from histoy relative to current position
 void get_command_minus(char* command){
+	char copy[512];
 	if(history_count-atoi(command)-1>=0){
-		printf("%s",history[history_count-atoi(command)-1].input_string);
-		tokenize(history[history_count-atoi(command)-1].input_string);
+	//	printf("%s",history[(history_count-atoi(command)-1)%20].input_string);
+		strcpy(copy,history[(history_count-atoi(command)-1)%20].input_string);
+		tokenize(copy);
 		runCommand();
 	}
 	else{
@@ -247,8 +257,15 @@ void store(char* command){
 
 //print saved history
 void print_history(){
-	for(int i=0;i<history_count && i<20;i++){
-		printf("%d %s\n",history[i].history_number+1,history[i].input_string);
+	if(history_count>=20)
+	for(int i=history_count%20;i<history_count%20+20;i++){
+		if(history[i%20].input_string!=NULL)
+			printf("%d %s\n",history[i%20].history_number+1,history[i%20].input_string);
+	}
+	else
+	for(int i=0;i<history_count;i++){
+		if(history[i].input_string!=NULL)
+			printf("%d %s\n",history[i].history_number+1,history[i].input_string);
 	}
 }
 
