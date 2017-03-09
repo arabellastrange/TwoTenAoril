@@ -31,6 +31,8 @@ void runCommand();
 void save_history_to_file(char *command);
 void load_saved_history();
 
+void save_alias_to_file();
+
 // main function calls input method, saves and restores the user path
 int main(){
 	next_store=0;
@@ -300,4 +302,48 @@ void load_saved_history() {
 	}
 
 	fclose(fp);
+}
+
+/*
+	Save a alias and the command it represents to a file.
+
+	Task
+		This will have to be changed depanding on how the alias is typed in.
+*/
+void save_alias_to_file(char *alias) {
+	FILE *fp;
+
+	fp = fopen("alias.txt", "a");
+	
+	// This will save in the format of alias:command
+	fprintf(fp, "%s", alias);
+	fclose(fp);
+}
+
+/*
+	This will check the alias file when no command is found in the path.
+	
+	Notes
+		The command is saved in the words array, along with any params required for it.
+*/
+void read_alias_from_file(char *alias) {
+	FILE *fp;
+	char buff[512];
+
+	fp = fopen("alias.txt", "r");
+	
+	while(fscanf(fp, "%s", buff) == 1) {
+		// Split the alias commands.
+		char *file_alias;
+		char *file_command;
+
+		file_alias = strtok(buff, ":");
+		file_commnd = strtok(NULL, ":");
+
+		if(strcmp(alias, file_alias) == 0) {
+			// Save the command the words array along with its params.
+			tokenize(buff);
+			runCommand();
+		}
+	}
 }
