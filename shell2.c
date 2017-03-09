@@ -36,7 +36,7 @@ int main(){
 	next_store=0;
 	history_count=0;
 	load_saved_history();
-	fp = fopen("prev_commands.txt", "a");
+	fp = fopen(".hist_list", "a");
 	//print_history();
 	orgPATH = strdup(getenv("PATH"));
 	PATH = strdup(orgPATH);
@@ -287,7 +287,7 @@ void save_history_to_file(char *command) {
 		Gettin the history number and the actual command seperated.
 */
 void load_saved_history() {
-	fp = fopen("prev_commands.txt", "r");
+	fp = fopen(".hist_list", "r");
 	char command_from_file[512];
 	while(fgets(command_from_file,sizeof command_from_file, fp)!=NULL){
 
