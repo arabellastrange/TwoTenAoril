@@ -14,7 +14,7 @@ struct command_history{
 	char input_string[512];
 	int history_number; //integer to track the number of the command
 }history[20];
-    	
+
 // Function Declarations
 void input();
 void print();
@@ -28,21 +28,21 @@ void store(char* command);
 void print_history();
 void tokenize(char *line);
 void runCommand();
-void save_history_to_file(char *command); 
+void save_history_to_file(char *command);
 void load_saved_history();
 
 // main function calls input method, saves and restores the user path
 int main(){
 	next_store=0;
-	history_count=0;	
+	history_count=0;
 	load_saved_history();
 	fp = fopen("prev_commands.txt", "a");
-	//print_history(); 	
+	//print_history();
 	orgPATH = strdup(getenv("PATH"));
-	PATH = strdup(orgPATH);	
+	PATH = strdup(orgPATH);
 	input();
 	setenv("PATH", orgPATH, 1);
-	printf("PATH : %s\n", getenv("PATH"));	
+	printf("PATH : %s\n", getenv("PATH"));
  	fclose(fp);
 	return 0;
 }
@@ -51,7 +51,7 @@ int main(){
 //It stops when the word 'exit' is given as input or when ctrl+D is pressed
 void input(){
 	char str[512],copy[512];
-	
+
 	//start programme by setting the defualt directory to the home directory
 	chdir(getenv("HOME"));
   	printf(">>");
@@ -69,7 +69,7 @@ void input(){
 				}
 			}
 		else
-			runCommand();			
+			runCommand();
 		}
 		//print();
    		printf(">>");
@@ -102,7 +102,7 @@ void runCommand(){
  				change_directory(words[1]);
  			}
  			else if(words[1] == NULL){
-				change_directory("~"); 				
+				change_directory("~");
  			}
  			else{
  				printf("cd only takes zero or one parameter\n");
@@ -112,7 +112,7 @@ void runCommand(){
 			if(words[0][1] != '\0' && words[0][1] != '-'){
 				char parameter[2];
 				strcpy(parameter,words[0]+1);
-				get_command(parameter);				
+				get_command(parameter);
 			}
 			else if(words[0][1] != '\0' && words[0][1] == '-' && words[0][2] != '\0'){
 				char parameter[2];
@@ -125,7 +125,7 @@ void runCommand(){
 		}
 		else if(strcmp(words[0],"history")==0 && words[1] == NULL)
 			print_history();
-		else 
+		else
 			fork_execution(words);
 }
 
@@ -182,7 +182,7 @@ void change_directory(char *directory){
 		chdir(getenv("HOME"));
 	}
 	else{
-		if(chdir(directory)==-1)		
+		if(chdir(directory)==-1)
 			perror(directory);
 	}
 }
@@ -190,7 +190,7 @@ void change_directory(char *directory){
 //call command from history by number
 void get_command(char* command){
 	if(command[0]!='!'){
-		if((atoi(command)-1<20) && (atoi(command)-1<history_count)) 
+		if((atoi(command)-1<20) && (atoi(command)-1<history_count))
 			if(atoi(command)-1>=0){
 				printf("%s\n",history[atoi(command)-1].input_string);
 				tokenize(history[atoi(command)-1].input_string);
@@ -213,14 +213,14 @@ void get_command(char* command){
 			printf("There's no previous command to be executed.\n");
 		}
 	else{
-		printf("that is not a valid input for !\n");	
+		printf("that is not a valid input for !\n");
 	}
 }
 
 //call command from histoy relative to current position
 void get_command_minus(char* command){
-	if(history_count-atoi(command)-1>=0){	
-		printf("%s",history[history_count-atoi(command)-1].input_string);	
+	if(history_count-atoi(command)-1>=0){
+		printf("%s",history[history_count-atoi(command)-1].input_string);
 		tokenize(history[history_count-atoi(command)-1].input_string);
 		runCommand();
 	}
@@ -252,35 +252,35 @@ void print_history(){
 	}
 }
 
-/* 	Questions: 		
-		Does the file ever empty? 		
-		Does it loop back to the start of the file and re write the items alrady stored. 	 Problem 		
-		This needs to know how many items are in the array. 
-*/ 
-void save_history_to_file(char *command) { 	
-		 		
-		// For each item in the history, add it the the file. 		
-		fprintf(fp, "%d:%s\n", history_count, command); 	
- 
-} 
+/* 	Questions:
+		Does the file ever empty?
+		Does it loop back to the start of the file and re write the items alrady stored. 	 Problem
+		This needs to know how many items are in the array.
+*/
+void save_history_to_file(char *command) {
 
-/* 	
-	Load the saved history in the file to the history array. 
-	Problems 	
-		Gettin the history number and the actual command seperated. 
-*/ 
-void load_saved_history() { 
-	fp = fopen("prev_commands.txt", "r"); 	
-	char command_from_file[512];	
-	while(fgets(command_from_file,sizeof command_from_file, fp)!=NULL){	
-		
+		// For each item in the history, add it the the file.
+		fprintf(fp, "%d:%s\n", history_count, command);
+
+}
+
+/*
+	Load the saved history in the file to the history array.
+	Problems
+		Gettin the history number and the actual command seperated.
+*/
+void load_saved_history() {
+	fp = fopen("prev_commands.txt", "r");
+	char command_from_file[512];
+	while(fgets(command_from_file,sizeof command_from_file, fp)!=NULL){
+
 		// Seprate the string into the two sections.
- 		history[next_store%20].history_number = atoi(strtok(command_from_file, ":\n"))-1;
+ 		history[next_store%20].history_number = atoi(strtok(command_from_file, ":\n"));
 		strcpy(history[next_store%20].input_string,strtok(NULL,":\n"));
-		printf("%d:%s\n",history[next_store%20].history_number+1, history[next_store%20].input_string);
-		next_store++;		
-		history_count++;		
+		printf("%d:%s\n",history[next_store%20].history_number, history[next_store%20].input_string);
+		next_store++;
+		history_count++;
 	}
-	
-	fclose(fp); 
+
+	fclose(fp);
 }
