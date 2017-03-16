@@ -28,8 +28,11 @@ void store(char* command);
 void print_history();
 void tokenize(char *line);
 void runCommand();
-void save_history_to_file(char *command);
+void save_history_to_file();
 void load_saved_history();
+void save_alias_to_file(char *alias);
+void read_alias_from_file(char *command);
+
 
 // main function calls input method, saves and restores the user path
 int main(){
@@ -37,10 +40,16 @@ int main(){
 	history_count=0;
 	orgPATH = strdup(getenv("PATH"));
 	PATH = strdup(orgPATH);
+	chdir(getenv("HOME"));
 	load_saved_history();
 	fp = fopen(".hist_list", "a");
+	if(!fp) {
+		printf("Failed to open file.\n");
+		my_exit(1);
+	}
 		//print_history();
 		input();
+		save_history_to_file();
 		setenv("PATH", orgPATH, 1);
 		printf("PATH : %s\n", getenv("PATH"));
  		fclose(fp);
@@ -53,7 +62,7 @@ void input(){
 	char str[512],copy[512];
 
 	//start programme by setting the defualt directory to the home directory
-	chdir(getenv("HOME"));
+	
   	printf(">>");
 	while(fgets(str, sizeof(str), stdin) != NULL){
 		strcpy(copy,str);
@@ -66,7 +75,7 @@ void input(){
 					break;
 			else{
 				store(strtok(copy,"\n"));
-				runCommand();	
+				runCommand();
 			}
 		//print();
    		printf(">>");
@@ -75,6 +84,7 @@ void input(){
 
 //call the appropriate method depending on user input
 void runCommand(){
+	char aliasCommand[512];
 	if(strcmp(words[0],"setpath") == 0){
 			if(words[1] != NULL && words[2]==NULL){
 				change_path(words[1]);
@@ -127,6 +137,23 @@ void runCommand(){
 			else {
 				printf("history doesn't take any parameters.\n");
 			}
+		else if(strcmp(words[0], "alias") == 0){
+			if(words[1] == NULL || words[2] == NULL){
+				printf("Must have an alias and a command");			
+			}
+			else{
+				strcpy(aliasCommand, words[1]);
+				strcat(aliasCommand, ":");
+				for(int i = 2; i < 512; i++){
+					if(words[i] != NULL){
+						strcat(aliasCommand,words[i]);
+						strcat(aliasCommand," ");		
+					}
+				}
+
+				save_alias_to_file(aliasCommand);
+			}		
+		}
 		else
 			fork_execution(words);
 }
@@ -155,6 +182,7 @@ void print(){
 
 //Creates a new process and runs it
 void fork_execution(char *command[]){
+
 	pid_t pid;
 	pid = fork();
 	if(pid<0) {
@@ -197,19 +225,21 @@ void get_command(char* command){
 			if(atoi(command)-1>=0)
 				if(history_count>20)
 				{
-					
 					strcpy(copy,history[(atoi(command)-1+history_count)%20].input_string);
 					tokenize(copy);
 					runCommand();
 				}
-				else
+				else if(atoi(command)-1<history_count)
 				{
 					strcpy(copy,history[atoi(command)-1].input_string);
 					tokenize(copy);
 					runCommand();
 				}
+				else {
+					printf("The number is greater than the number of commands previously executed\n");
+				}
 			else{
-				printf("There is no command with number 0.\n");
+				printf("There is no command %s\n",command);
 			}
 		else{
 			printf("The number is greater than the number of commands previously executed\n");
@@ -233,12 +263,16 @@ void get_command(char* command){
 //call command from histoy relative to current position
 void get_command_minus(char* command){
 	char copy[512];
-	if(history_count-atoi(command)-1>=0){
-	//	printf("%s",history[(history_count-atoi(command)-1)%20].input_string);
-		strcpy(copy,history[(history_count-atoi(command)-1)%20].input_string);
-		tokenize(copy);
-		runCommand();
-	}
+	if(history_count-atoi(command)-1>0)
+		if(command[0]>='0' && command[0]<='9'){
+		//	printf("%s",history[(history_count-atoi(command)-1)%20].input_string);
+			strcpy(copy,history[(history_count-atoi(command)-1)%20].input_string);
+			tokenize(copy);
+			runCommand();
+		}
+		else {
+			printf("Invalid input passed.\n");
+		}
 	else{
 		printf("Number larger than the number of commands stored.\n");
 	}
@@ -256,7 +290,6 @@ void store(char* command){
 		strcpy(history[next_store%20].input_string,command);
 		history[next_store%20].history_number=++history_count;
 		next_store=(next_store+1)%20;
-		save_history_to_file(command);
 	}
 }
 
@@ -275,19 +308,18 @@ void print_history(){
 }
 
 
-void save_history_to_file(char *command) {
-
-		// For each item in the history, add it the the file.
-		fprintf(fp, "%d:%s\n", history_count, command);
-
+void save_history_to_file() {
+		for(int i=0;i<20 && i<history_count;i++)	
+			fprintf(fp, "%d:%s\n", history[i].history_number, history[i].input_string);
+				
 }
 
 void load_saved_history() {
-	char command_from_file[512];	
+	char command_from_file[512];
 	fp = fopen(".hist_list", "r");
 	if(!fp) {
-		printf("Failed to open file.\n");
-		my_exit(1);
+		//printf("Failed to open file.\n");
+		//my_exit(1);
 	}
 	else{
 	while(fgets(command_from_file,sizeof command_from_file, fp)!=NULL){
@@ -302,4 +334,36 @@ void load_saved_history() {
 
 	fclose(fp);
 }
+}
+
+void save_alias_to_file(char *alias){
+	FILE *aliasFile;
+
+	aliasFile = fopen("alias.txt","w");
+	fprintf(aliasFile, "%s\n",alias);
+
+	fclose(aliasFile);
+}
+
+void read_alias_from_file(char *command){
+	FILE *alias_file;
+	char buff[512];
+
+	alias_file=fopen("alias.txt","r");
+
+	while(fgets(buff, sizeof buff, fp)!=NULL) {
+		fscanf(alias_file, "%s", buff);
+
+		char alias[100];
+		char alias_command[512];
+
+		strcpy(alias, strtok(alias, ":"));
+		strcpy(command, strtok(NULL, ":"));
+
+		//Alias has been found in the file.
+		if(strcmp(command,alias) == 0){
+			//save the command to the words array then tok it and run.
+		}
+	}
+
 }
