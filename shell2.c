@@ -31,8 +31,9 @@ void runCommand();
 void save_history_to_file();
 void load_saved_history();
 void save_alias_to_file(char *alias);
-void read_alias_from_file(char *command);
+void invoke_alias(char *command);
 
+int isAlias(char *alias);
 void remove_alias_from_file(char *alias);
 void print_aliases();
 
@@ -89,77 +90,82 @@ void input(){
 void runCommand(){
 	char aliasCommand[512];
 	if(strcmp(words[0],"setpath") == 0){
-			if(words[1] != NULL && words[2]==NULL){
-				change_path(words[1]);
-			}
-			else if(words[1] == NULL){
-				printf("setpath needs a parameter.\n");
-			}
-			else{
-				printf("setpath only takes one parameter \n");
-			}
+		if(words[1] != NULL && words[2]==NULL){
+			change_path(words[1]);
 		}
-		else if(strcmp(words[0],"getpath") == 0){
-			if(words[1] == NULL){
-				printf("PATH : %s\n",getenv("PATH"));
-			}
-			else{
-				printf("getpath doesn't take a parameter.\n");
-			}
+		else if(words[1] == NULL){
+			printf("setpath needs a parameter.\n");
 		}
- 		else if(strcmp(words[0], "cd") == 0){
- 			if(words[1] != NULL && words[2] == NULL){
- 				change_directory(words[1]);
- 			}
- 			else if(words[1] == NULL){
-				change_directory("~");
- 			}
- 			else{
- 				printf("cd only takes zero or one parameter\n");
- 			}
- 		}
-		else if(words[0][0] == '!'){
-			if(words[0][1] != '\0' && words[0][1] != '-'){
-				char parameter[2];
-				strcpy(parameter,words[0]+1);
-				get_command(parameter);
-			}
-			else if(words[0][1] != '\0' && words[0][1] == '-' && words[0][2] != '\0'){
-				char parameter[2];
-				strcpy(parameter,words[0]+2);
-				get_command_minus(parameter);
- 			}
- 			else{
- 				printf("! needs an input \n");
- 			}
+		else{
+			printf("setpath only takes one parameter \n");
 		}
-		else if(strcmp(words[0],"history")==0)
-			if(words[1]==NULL){
-				print_history();
-			}
-			else {
-				printf("history doesn't take any parameters.\n");
-			}
-		else if(strcmp(words[0], "alias") == 0){
-			if(words[1] == NULL || words[2] == NULL){
-				printf("Must have an alias and a command\n");			
-			}
-			else{
-				strcpy(aliasCommand, words[1]);
-				strcat(aliasCommand, ":");
-				strcat(aliasCommand, words[2]); // This should add the actual command to the line.
-				for(int i = 2; i < 50; i++){
-					if(words[i] != NULL){
-						strcat(aliasCommand,words[i]);
-						strcat(aliasCommand," ");		
-					}
+	}
+	else if(strcmp(words[0],"getpath") == 0){
+		if(words[1] == NULL){
+			printf("PATH : %s\n",getenv("PATH"));
+		}
+		else{
+			printf("getpath doesn't take a parameter.\n");
+		}
+	}
+	else if(strcmp(words[0], "cd") == 0){
+		if(words[1] != NULL && words[2] == NULL){
+			change_directory(words[1]);
+		}
+		else if(words[1] == NULL){
+			change_directory("~");
+		}
+		else{
+			printf("cd only takes zero or one parameter\n");
+		}
+	}
+	else if(words[0][0] == '!'){
+		if(words[0][1] != '\0' && words[0][1] != '-'){
+			char parameter[2];
+			strcpy(parameter,words[0]+1);
+			get_command(parameter);
+		}
+		else if(words[0][1] != '\0' && words[0][1] == '-' && words[0][2] != '\0'){
+			char parameter[2];
+			strcpy(parameter,words[0]+2);
+			get_command_minus(parameter);
+		}
+		else{
+			printf("! needs an input \n");
+		}
+	}
+	else if(strcmp(words[0],"history")==0){
+		if(words[1]==NULL){
+			print_history();
+		}
+		else {
+			printf("history doesn't take any parameters.\n");
+		}
+	}
+	else if(strcmp(words[0], "alias") == 0){
+		if(words[1] == NULL || words[2] == NULL){
+			printf("Must have an alias and a command\n");			
+		}
+		else{
+			strcpy(aliasCommand, words[1]);
+			strcat(aliasCommand, ":");
+			for(int i = 2; i < 50; i++){
+				if(words[i] != NULL){
+					strcat(aliasCommand,words[i]);
+					strcat(aliasCommand," ");		
 				}
-
-				save_alias_to_file(aliasCommand);
-			}		
-		}
-		else
-			fork_execution(words);
+			}
+				
+			printf("The alias saved\n");
+			save_alias_to_file(aliasCommand);
+		}		
+	}
+	else if(isAlias(words[0]) == 1){
+		invoke_alias(words[0]);	
+	}
+	else{
+		fork_execution(words);
+	}
 }
 
 //break user input into tokens at the space (or other specified symbols)
@@ -343,57 +349,81 @@ void load_saved_history() {
 void save_alias_to_file(char *alias){
 	FILE *aliasFile;
 
-	aliasFile = fopen("alias.txt","w");
-	fprintf(aliasFile, "%s\n",alias);
+	printf("%s\n", alias);
+	aliasFile = fopen("alias.txt","a");
+	fprintf(aliasFile, "%s\n", alias);
 
 	fclose(aliasFile);
 }
 
-void read_alias_from_file(char *command){
+int isAlias(char *alias) {
 	FILE *alias_file;
-	char buff[512];
+	char alias_file_line[512];
 
-	alias_file=fopen("alias.txt","r");
+	alias_file = fopen("alias.txt", "r");
 
-	while(fgets(buff, sizeof buff, fp)!=NULL) {
-		fscanf(alias_file, "%s", buff);
+	while(fgets(alias_file_line, sizeof alias_file_line, alias_file) !=NULL) {
+		//fscanf(alias_file, "%s", alias_file_line);
 
-		char alias[100];
-		char alias_command[512];
+		strtok(alias_file_line, ":");
 
-		strcpy(alias, strtok(alias, ":"));
-		strcpy(command, strtok(NULL, ":"));
+		if(strcmp(alias_file_line, alias) == 0) {
+			return 1;
 
-		//Alias has been found in the file.
-		if(strcmp(command, alias) == 0){
-			//save the command to the words array then and run.
 		}
 	}
-
+	return 0;
 }
 
-void remove_alias_from_file(char *alias) {
+void invoke_alias(char *command){
 	FILE *alias_file;
 	char buff[512];
+	char copy[512];
+	char alias_command[512];
+	
+	alias_file = fopen("alias.txt","r");
 
-	alias_file = fopen("alias.txt");
+	while(fgets(buff, sizeof buff, alias_file)!=NULL) {
 
-	while(fgets(buff, sizeof buff, alias_file) != NULL) {
-		fscanf(alias_file, "%s", buff); // Read in the alias on a line.
-		
 		char alias[100];
-		char alias_command[512];
+		
 
-		strcpy(alias, strtok(alias, ":"));
-		strcpy(command, strtok(NULL, ":"));	
+		strcpy(alias, strtok(buff, ":"));
+	
+		if(strcmp(alias, command) == 0) {
+			strcpy(alias_command, strtok(NULL, ":"));
+		}
+
 	}
+
+	strcpy(copy, alias_command);
+	tokenize(copy);			
+	runCommand();
+
 }
+
+//void remove_alias_from_file(char *alias) {
+//	FILE *alias_file;
+//	char buff[512];
+//
+//	alias_file = fopen("alias.txt");
+//
+//	while(fgets(buff, sizeof buff, alias_file) != NULL) {
+//		fscanf(alias_file, "%s", buff); // Read in the alias on a line.
+//		
+//		char alias[100];
+//		char alias_command[512];
+//
+//		strcpy(alias, strtok(alias, ":"));
+//		
+//	}
+//}
 
 void print_aliases() {
 	FILE *alias_file;
 	char buff[512];	
 
-	alisa_file = fopen("alias.txt", "r");
+	alias_file = fopen("alias.txt", "r");
 
 	while(fgets(buff, sizeof buff, alias_file) != NULL) {
 		fscanf(alias_file, "%s", buff);
