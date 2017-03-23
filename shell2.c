@@ -335,7 +335,7 @@ void load_saved_history() {
 			history_count = 20;
 		if(history[next_store%20].history_number>history_count)				
 			history_count=history[next_store%20].history_number;
-		next_store++;
+		next_store++;	
 	}
 	next_store = history_count%20;
 	fclose(fp);
