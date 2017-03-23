@@ -15,6 +15,11 @@ struct command_history{
 	int history_number; //integer to track the number of the command
 }history[20];
 
+struct saved_aliases {
+	char alias[512];
+	char actual_command[512];
+} aliases[50];
+
 // Function Declarations
 void input();
 void print();
@@ -144,7 +149,7 @@ void runCommand(){
 	}
 	else if(strcmp(words[0], "alias") == 0){
 		if(words[1] == NULL || words[2] == NULL){
-			printf("Must have an alias and a command\n");			
+			print_aliases();
 		}
 		else{
 			strcpy(aliasCommand, words[1]);
@@ -408,22 +413,19 @@ void invoke_alias(char *command){
 
 }
 
-//void remove_alias_from_file(char *alias) {
-//	FILE *alias_file;
-//	char buff[512];
-//
-//	alias_file = fopen("alias.txt");
-//
-//	while(fgets(buff, sizeof buff, alias_file) != NULL) {
-//		fscanf(alias_file, "%s", buff); // Read in the alias on a line.
-//		
-//		char alias[100];
-//		char alias_command[512];
-//
-//		strcpy(alias, strtok(alias, ":"));
-//		
-//	}
-//}
+void remove_alias_from_file(char *alias) {
+	FILE *alias_file;
+	char buff[512];
+	alias_file = fopen("alias.txt");
+
+	while(fgets(buff, sizeof buff, alias_file) != NULL) {				
+		char alias[100];
+		char alias_command[512];
+
+		strcpy(alias, strtok(alias, ":"));
+		
+	}
+}
 
 void print_aliases() {
 	FILE *alias_file;
@@ -432,8 +434,7 @@ void print_aliases() {
 	alias_file = fopen("alias.txt", "r");
 
 	while(fgets(buff, sizeof buff, alias_file) != NULL) {
-		fscanf(alias_file, "%s", buff);
-		printf("%s\n", buff);
+		printf("%s", buff);
 	}
 }
 
