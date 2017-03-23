@@ -305,15 +305,19 @@ void store(char* command){
 
 //print saved history
 void print_history(){
-	if(history_count>=20)
-	for(int i=history_count%20;i<history_count%20+20;i++){
-		if(history[i%20].input_string!=NULL)
-			printf("%d %s\n",history[i%20].history_number-history[history_count%20].history_number+1,history[i%20].input_string);
-	}
+	if(history_count>20) 
+        	for(int i = history_count%20; i< history_count;i++)
+			if(history[i].input_string!=NULL)
+				printf("%d %s\n",history[i%20].history_number-history[history_count%20].history_number+1, history[i%20].input_string);
+			else{
+                         }
 	else
-	for(int i=0;i<history_count;i++){
-		if(history[i].input_string!=NULL)
-			printf("%d %s\n",history[i].history_number,history[i].input_string);
+		for(int i=0;i<20 && i < history_count;i++){
+			if(history[i].input_string!=NULL)
+				if(history[i].history_number != 0)
+					printf("%d %s\n",history[i].history_number,history[i].input_string);
+				else
+					printf("%d %s\n",20,history[i].input_string);
 	}
 }
 
@@ -328,8 +332,8 @@ void load_saved_history() {
 	char command_from_file[512];
 	fp = fopen(".hist_list", "r");
 	if(!fp) {
-		//printf("Failed to open file.\n");
-		//my_exit(1);
+		next_store = 0;
+		history_count = 0;
 	}
 	else{
 	while(fgets(command_from_file,sizeof command_from_file, fp)!=NULL){
@@ -337,11 +341,13 @@ void load_saved_history() {
 		// Seprate the string into the two sections.
  		history[next_store%20].history_number = atoi(strtok(command_from_file, ":"));
 		strcpy(history[next_store%20].input_string,strtok(NULL,":\n"));
-		next_store++;
-		history_count++;
-		
+		if(history[next_store%20].history_number==0 && history_count<20)
+			history_count = 20;
+		if(history[next_store%20].history_number>history_count)				
+			history_count=history[next_store%20].history_number;
+		next_store++;	
 	}
-	printf("history_count is %d\n",history_count);
+	next_store = history_count%20;
 	fclose(fp);
 }
 }
