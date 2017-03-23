@@ -1,3 +1,20 @@
+#include<stdio.h>
+#include<string.h>
+#include<unistd.h>
+#include<sys/types.h>
+#include<sys/wait.h>
+#include<stdlib.h>
+
+FILE *fp;
+char *words[50];
+char *orgPATH;
+char *PATH;
+int next_store,history_count;
+struct command_history{
+	char input_string[512];
+	int history_number; //integer to track the number of the command
+}history[20];
+
 // Function Declarations
 void input();
 void print();
@@ -15,6 +32,9 @@ void save_history_to_file();
 void load_saved_history();
 void save_alias_to_file(char *alias);
 void read_alias_from_file(char *command);
+
+void remove_alias_from_file(char *alias);
+void print_aliases();
 
 
 // main function calls input method, saves and restores the user path
@@ -122,11 +142,12 @@ void runCommand(){
 			}
 		else if(strcmp(words[0], "alias") == 0){
 			if(words[1] == NULL || words[2] == NULL){
-				printf("Must have an alias and a command");			
+				printf("Must have an alias and a command\n");			
 			}
 			else{
 				strcpy(aliasCommand, words[1]);
 				strcat(aliasCommand, ":");
+				strcat(aliasCommand, words[2]); // This should add the actual command to the line.
 				for(int i = 2; i < 50; i++){
 					if(words[i] != NULL){
 						strcat(aliasCommand,words[i]);
@@ -344,9 +365,83 @@ void read_alias_from_file(char *command){
 		strcpy(command, strtok(NULL, ":"));
 
 		//Alias has been found in the file.
-		if(strcmp(command,alias) == 0){
-			//save the command to the words array then tok it and run.
+		if(strcmp(command, alias) == 0){
+			//save the command to the words array then and run.
 		}
 	}
 
 }
+
+void remove_alias_from_file(char *alias) {
+	FILE *alias_file;
+	char buff[512];
+
+	alias_file = fopen("alias.txt");
+
+	while(fgets(buff, sizeof buff, alias_file) != NULL) {
+		fscanf(alias_file, "%s", buff); // Read in the alias on a line.
+		
+		char alias[100];
+		char alias_command[512];
+
+		strcpy(alias, strtok(alias, ":"));
+		strcpy(command, strtok(NULL, ":"));	
+	}
+}
+
+void print_aliases() {
+	FILE *alias_file;
+	char buff[512];	
+
+	alisa_file = fopen("alias.txt", "r");
+
+	while(fgets(buff, sizeof buff, alias_file) != NULL) {
+		fscanf(alias_file, "%s", buff);
+		printf("%s\n", buff);
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
