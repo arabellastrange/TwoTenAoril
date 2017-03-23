@@ -42,7 +42,7 @@ int main(){
 	PATH = strdup(orgPATH);
 	chdir(getenv("HOME"));
 	load_saved_history();
-	fp = fopen(".hist_list", "a");
+	fp = fopen(".hist_list", "w");
 	if(!fp) {
 		printf("Failed to open file.\n");
 		my_exit(1);
@@ -144,7 +144,7 @@ void runCommand(){
 			else{
 				strcpy(aliasCommand, words[1]);
 				strcat(aliasCommand, ":");
-				for(int i = 2; i < 512; i++){
+				for(int i = 2; i < 50; i++){
 					if(words[i] != NULL){
 						strcat(aliasCommand,words[i]);
 						strcat(aliasCommand," ");		
@@ -327,11 +327,11 @@ void load_saved_history() {
 		// Seprate the string into the two sections.
  		history[next_store%20].history_number = atoi(strtok(command_from_file, ":"));
 		strcpy(history[next_store%20].input_string,strtok(NULL,":\n"));
-		//printf("%d:%s\n",history[next_store%20].history_number, history[next_store%20].input_string);
 		next_store++;
 		history_count++;
+		
 	}
-
+	printf("history_count is %d\n",history_count);
 	fclose(fp);
 }
 }
