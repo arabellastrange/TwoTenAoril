@@ -57,13 +57,13 @@ int main(){
 		printf("Failed to open file.\n");
 		my_exit(1);
 	}
-		//print_history();
-		input();
-		save_history_to_file();
-		setenv("PATH", orgPATH, 1);
-		printf("PATH : %s\n", getenv("PATH"));
- 		fclose(fp);
-		return 0;
+	//print_history();
+	input();
+	save_history_to_file();
+	setenv("PATH", orgPATH, 1);
+	printf("PATH : %s\n", getenv("PATH"));
+	fclose(fp);
+	return 0;
 }
 
 //Gets a line and separates it into tokens which are saved in a pointer array
@@ -168,11 +168,11 @@ void runCommand(){
 	}
 	else if(isAlias(words[0]) == 1){
 		invoke_alias(words[0]);	
-	} else if(strcmp(words[0], "unalias") == 0) {
-		read_aliases_to_struct();
-		remove_alias_from_file("15");
 	}
-	else{
+	else if(strcmp(words[0], "unalias") == 0) {
+		read_aliases_to_struct();
+	}
+	else {
 		fork_execution(words);
 	}
 }
@@ -484,3 +484,4 @@ void print_aliases() {
 		printf("%s", buff);
 	}
 }
+
