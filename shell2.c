@@ -168,6 +168,9 @@ void runCommand(){
 	}
 	else if(isAlias(words[0]) == 1){
 		invoke_alias(words[0]);	
+	} else if(strcmp(words[0], "unalias") == 0) {
+		read_aliases_to_struct();
+		remove_alias_from_file("15");
 	}
 	else{
 		fork_execution(words);
@@ -360,7 +363,6 @@ void load_saved_history() {
 void save_alias_to_file(char *alias){
 	FILE *aliasFile;
 
-	printf("%s\n", alias);
 	aliasFile = fopen("alias.txt","a");
 	fprintf(aliasFile, "%s\n", alias);
 
@@ -369,20 +371,21 @@ void save_alias_to_file(char *alias){
 
 void read_aliases_to_struct() {
 	FILE *alias_file;
-	char alias_line[512]; // The whole line from the file.
+
 	int alias_count = 0;
+	char alias_line[512];
 	
 	alias_file = fopen("alias.txt", "r");
 
 	while(fgets(alias_line, sizeof alias_line, alias_file) != NULL) {
 		// Seperate the alias and the command.
-		char *alias_from_file strtok(alias_line, ":");
+		char *alias_from_file = strtok(alias_line, ":");
 		char *actual_command_from_file = strtok(NULL, ":");
-		
+	
 		// Add the alias and command to the struct.
-		aliases[alias_count].alias = alias_from_file;
-		aliases[alias_count].actual_command = actual_command_from_file;
-		
+		strcpy(aliases[alias_count].alias, alias_from_file);
+		strcpy(aliases[alias_count].actual_command, actual_command_from_file);
+
 		alias_count++;	
 	}
 }
@@ -431,17 +434,44 @@ void invoke_alias(char *command){
 void remove_alias_from_file(char *alias) {
 	int alias_index = 0;
 
-	// Go through all the lines in the alias struct.
-	while(0) {
-		if(strcmp(aliases[alias_index].alias, alias) == 0) {
-			aliases[alias_inedx].alias = "";
-			aliases[alias_index].actual_command = "";
-			break;
-		}
-		alias_index++;
-	}
+	printf("Trying to remove alias: %s\n", alias);
 
-	// Write all of the alias back to the file, if its not equals to NULL or "".
+	if(isAlias(alias) == 1) {
+		printf("I found the alias\n");
+		
+		// Go through all the lines in the alias struct.
+		while(sizeof(aliases) / sizeof(aliases[0]) && alias_index < 50) {
+			if(strcmp(aliases[alias_index].alias, alias) == 0) {
+				printf("Alias: %s:%s", aliases[alias_index].alias, aliases[alias_index].actual_command);				
+
+				strcpy(aliases[alias_index].alias, "");
+				strcpy(aliases[alias_index].actual_command, "");
+
+				printf("Alias should be NULL: %s:%s\n", aliases[alias_index].alias, aliases[alias_index].actual_command);
+			}
+			alias_index++;
+		}
+
+		int i = 0;
+		while(sizeof(aliases) / sizeof(aliases[0]) && i < 50) {
+			printf("%d\n", strcmp(aliases[i].alias, ""));
+
+			if(strcmp(aliases[i].alias, "") != 0) {
+				// Re construct the alias to one line to save.
+				char alias_line[512] = "";
+				strcat(alias_line, aliases[i].alias);
+				strcat(alias_line, ":");
+				strcat(alias_line, aliases[i].actual_command);
+
+				// Write all the alias back to the file.
+				printf("Alias being saved - %s", alias_line);
+				save_alias_to_file(alias_line);
+			}
+			i++;
+		}
+	} else {
+		printf("Not a valid alias\n");
+	}
 }
 
 void print_aliases() {
