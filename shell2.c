@@ -6,6 +6,7 @@
 #include<stdlib.h>
 
 FILE *fp;
+FILE *aliasFile;
 char *words[50];
 char *orgPATH;
 char *PATH;
@@ -42,7 +43,7 @@ void remove_alias(char *alias);
 void print_aliases();
 
 
-// main function calls input method, saves and restores the user path
+// main function calls input method, saves and restores the user path, opens files for history and aliases for writing 
 int main(){
 	alias_number = 0;
 	next_store=0;
@@ -57,18 +58,24 @@ int main(){
 		printf("Failed to open file.\n");
 		my_exit(1);
 	}
-	//print_history();
+	aliasFile = fopen(".aliases","w");
+	if(!aliasFile){
+		printf("Failed to open file.\n");
+		my_exit(1);
+	}	
+	
 	input();
-	save_history_to_file();
-	save_alias_to_file();
+
 	setenv("PATH", orgPATH, 1);
 	printf("PATH : %s\n", getenv("PATH"));
+	save_history_to_file();
+	save_alias_to_file();
+	fclose(aliasFile);	
 	fclose(fp);
 	return 0;
 }
 
-//Gets a line and separates it into tokens which are saved in a pointer array
-//It stops when the word 'exit' is given as input or when ctrl+D is pressed
+//Gets a line, calls the tokenize and the run function as long as the input is different from 'exit' or when ctrl+D is pressed
 void input(){
 	char str[512],copy[512];
 
@@ -87,7 +94,17 @@ void input(){
 					break;
 			else{
 				store(strtok(copy,"\n"));
-			if(isAlias(words[0]) == 1)
+			
+				runCommand();
+			}
+   		printf(">>");
+	}
+}
+
+//call the appropriate method depending on user input
+void runCommand(){
+	char aliasCommand[512],copy[512];
+	if(isAlias(words[0]) == 1)
 			for(int i=0;i<alias_number;i++)
 				if(strcmp(words[0],aliases[i].alias)==0) {
 					int word_count;			
@@ -101,11 +118,10 @@ void input(){
 					token = strtok(copy, s);
 					for(int i=0;i<word_count-1;i++)
 						strcpy(words[i],words[i+1]);
-					
 					word_count --;		
    					while( token != NULL ) {
-						for(int i = word_count-1;i>k;i--)
-							strcpy(words[i],words[i-1]);
+						for(int j = word_count;j>k;j--)
+						words[j]=strdup(words[j-1]);
       						words[k] = strdup(token);
 						k++;
 						word_count++;
@@ -113,16 +129,6 @@ void input(){
    					}
 					words[word_count] = NULL;
 				}
-				runCommand();
-			}
-   		printf(">>");
-	}
-}
-
-//call the appropriate method depending on user input
-void runCommand(){
-	char aliasCommand[512];
-	
 	if(strcmp(words[0],"setpath") == 0){
 		if(words[1] != NULL && words[2]==NULL){
 			change_path(words[1]);
@@ -183,7 +189,7 @@ void runCommand(){
 		else if(words[1]!=NULL && words[2]==NULL) {
 			printf("Can't create the alias; command corresponding to alias not given.\n");
 		}  
-		else if(alias_number<10){
+		else if(alias_number<10 || isAlias(words[1])){
 				strcpy(aliasCommand, words[2]);
 				if(words[3]!=NULL)
 				strcat(aliasCommand, " ");
@@ -213,6 +219,7 @@ void runCommand(){
 			}			
 	}	
 	else if(strcmp(words[0], "unalias") == 0)
+		if(alias_number>0) {
 		if(words[1]!=NULL)		
 			if(words[2]==NULL) {
 				remove_alias(words[1]);
@@ -222,6 +229,10 @@ void runCommand(){
 			}		
 		else {
 			printf("Unalias command expects one argument.\n");
+		}
+		}
+		else{
+			printf("Alias list is empty.\n");
 		}
 	else {
 		fork_execution(words);
@@ -290,6 +301,10 @@ void change_directory(char *directory){
 //call command from history by number
 void get_command(char* command){
 	char copy[512];
+	int ok = 1;
+	for(int i=0;i<strlen(command) && ok==1;i++)
+		if(!(command[i]>='0' && command[i]<='9'))
+			ok = 0;
 	if(command[0]!='!'){
 		if((atoi(command)-1<20))
 			if(atoi(command)-1>=0)
@@ -305,9 +320,12 @@ void get_command(char* command){
 					tokenize(copy);
 					runCommand();
 				}
-				else {
+				else if(ok==1){
 					printf("The number is greater than the number of commands previously executed\n");
 				}
+					else {
+						printf("There is no command %s\n",command);
+					}
 			else{
 				printf("There is no command %s\n",command);
 			}
@@ -332,17 +350,21 @@ void get_command(char* command){
 //call command from histoy relative to current position
 void get_command_minus(char* command){
 	char copy[512];
-	if(history_count-atoi(command)-1>0)
-		if(command[0]>='0' && command[0]<='9'){
+	int ok = 1;
+	for(int i=0;i<strlen(command) && ok==1;i++)
+		if(!(command[i]>='0' && command[i]<='9'))
+			ok = 0;
+	if(ok==1)
+		if(history_count-atoi(command)-1>=0 && atoi(command)<20){
 			strcpy(copy,history[(history_count-atoi(command)-1)%20].input_string);
 			tokenize(copy);
 			runCommand();
 		}
 		else {
-			printf("Invalid input passed.\n");
+			printf("Number larger than the number of commands stored.\n");
 		}
 	else{
-		printf("Number larger than the number of commands stored.\n");
+			printf("Invalid input passed.\n");
 	}
 }
 
@@ -379,13 +401,14 @@ void print_history(){
 	}
 }
 
-
+//saves the content of history struct in a file
 void save_history_to_file() {
 		for(int i=0;i<20 && i<history_count;i++)	
 			fprintf(fp, "%d:%s\n", history[i].history_number, history[i].input_string);
 				
 }
 
+//load the contents from .hist_list file into the history structure 
 void load_saved_history() {
 	char command_from_file[512];
 	fp = fopen(".hist_list", "r");
@@ -409,6 +432,7 @@ void load_saved_history() {
 	}
 }
 
+//loads the contents of .aliases file in the aliases structure
 void load_aliases(){
 	char alias_line[512];
 	fp = fopen(".aliases", "r");
@@ -423,16 +447,15 @@ void load_aliases(){
 		fclose(fp);
 	}
 }
-void save_alias_to_file(char *alias){
-	FILE *aliasFile;
 
-	aliasFile = fopen(".aliases","w");
+//saves the contents of the alias structure in a file
+void save_alias_to_file(){
 	for(int i=0;i<alias_number;i++)
 		fprintf(aliasFile, "%s:%s\n", aliases[i].alias,aliases[i].actual_command);
 
-	fclose(aliasFile);
 }
 
+//checks if a string is an alias or not
 int isAlias(char *alias) {
 	for (int i=0;i<alias_number;i++)
 		if(strcmp(aliases[i].alias,alias)==0)
@@ -440,6 +463,7 @@ int isAlias(char *alias) {
 	return 0;
 }
 
+//removes an alias from the list of aliases
 void remove_alias(char *alias) {
 	int alias_index = 0;
 
@@ -460,9 +484,10 @@ void remove_alias(char *alias) {
 	}
 }
 
+//prints the aliases which are already stored
 void print_aliases() {
+	if(alias_number==0)
+		printf("There are no saved aliases.\n");
 		for(int i=0;i<alias_number;i++)
 			printf("%d %s:%s\n",i+1,aliases[i].alias,aliases[i].actual_command);
 	}
-
-
