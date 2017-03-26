@@ -41,6 +41,7 @@ void save_alias_to_file();
 int isAlias(char *alias);
 void remove_alias(char *alias);
 void print_aliases();
+void restoreAlias();
 
 
 // main function calls input method, saves and restores the user path, opens files for history and aliases for writing 
@@ -78,25 +79,23 @@ int main(){
 //Gets a line, calls the tokenize and the run function as long as the input is different from 'exit' or when ctrl+D is pressed
 void input(){
 	char str[512],copy[512];
-
-	//start programme by setting the defualt directory to the home directory
-	
-  	printf(">>");
+	printf(">>");
 	while(fgets(str, sizeof(str), stdin) != NULL){
 		strcpy(copy,str);
 		tokenize(str);
-		
-		if(words[0]!=NULL)
+		restoreAlias();
+		if(words[0]!=NULL){
+			store(strtok(copy,"\n"));
 			if(strcmp(words[0],"exit") == 0)
 				if(words[1] != NULL)
 					printf("Exit doesn't take any parameters.\n");
 				else
 					break;
 			else{
-				store(strtok(copy,"\n"));
-			
 				runCommand();
 			}
+
+		}
    		printf(">>");
 	}
 }
@@ -104,31 +103,7 @@ void input(){
 //call the appropriate method depending on user input
 void runCommand(){
 	char aliasCommand[512],copy[512];
-	if(isAlias(words[0]) == 1)
-			for(int i=0;i<alias_number;i++)
-				if(strcmp(words[0],aliases[i].alias)==0) {
-					int word_count;			
-					for(word_count=0;word_count<50;word_count++)
-						if(words[word_count]==NULL)
-							break;						
-					const char s[] = "|><&; \t\n";
-					char *token;
-					int k=0;
-					strcpy(copy,aliases[i].actual_command);					
-					token = strtok(copy, s);
-					for(int i=0;i<word_count-1;i++)
-						strcpy(words[i],words[i+1]);
-					word_count --;		
-   					while( token != NULL ) {
-						for(int j = word_count;j>k;j--)
-						words[j]=strdup(words[j-1]);
-      						words[k] = strdup(token);
-						k++;
-						word_count++;
-      						token = strtok(NULL, s);
-   					}
-					words[word_count] = NULL;
-				}
+	
 	if(strcmp(words[0],"setpath") == 0){
 		if(words[1] != NULL && words[2]==NULL){
 			change_path(words[1]);
@@ -312,13 +287,47 @@ void get_command(char* command){
 				{
 					strcpy(copy,history[(atoi(command)-1+history_count)%20].input_string);
 					tokenize(copy);
-					runCommand();
+					restoreAlias();
+					if(words[0]!=NULL)
+						if(strcmp(words[0],"exit") == 0)	
+							if(words[1] != NULL)
+								printf("Exit doesn't take any parameters.\n");
+							else{
+								setenv("PATH", orgPATH, 1);
+								printf("PATH : %s\n", getenv("PATH"));
+								save_history_to_file();
+								save_alias_to_file();
+								fclose(aliasFile);	
+								fclose(fp);
+								my_exit(0);
+							}
+						else{
+							runCommand();
+						}
+					
 				}
 				else if(atoi(command)-1<history_count)
 				{
 					strcpy(copy,history[atoi(command)-1].input_string);
 					tokenize(copy);
-					runCommand();
+					restoreAlias();
+					if(words[0]!=NULL)
+						if(strcmp(words[0],"exit") == 0)	
+							if(words[1] != NULL)
+								printf("Exit doesn't take any parameters.\n");
+							else{
+								setenv("PATH", orgPATH, 1);
+								printf("PATH : %s\n", getenv("PATH"));
+								save_history_to_file();
+								save_alias_to_file();
+								fclose(aliasFile);	
+								fclose(fp);
+								my_exit(0);
+							}
+						else{
+							runCommand();
+						}
+					
 				}
 				else if(ok==1){
 					printf("The number is greater than the number of commands previously executed\n");
@@ -337,7 +346,23 @@ void get_command(char* command){
 		if(history_count>0){
 			strcpy(copy,history[(history_count-1)%20].input_string);
 			tokenize(copy);
-			runCommand();
+			restoreAlias();
+			if(words[0]!=NULL)
+				if(strcmp(words[0],"exit") == 0)	
+					if(words[1] != NULL)			
+						printf("Exit doesn't take any parameters.\n");
+					else{
+						setenv("PATH", orgPATH, 1);
+						printf("PATH : %s\n", getenv("PATH"));
+						save_history_to_file();
+						save_alias_to_file();
+						fclose(aliasFile);	
+						fclose(fp);
+						my_exit(0);
+					}
+				else{
+					runCommand();
+				}		
 		}
 		else{
 			printf("There's no previous command to be executed.\n");
@@ -358,13 +383,59 @@ void get_command_minus(char* command){
 		if(history_count-atoi(command)-1>=0 && atoi(command)<20){
 			strcpy(copy,history[(history_count-atoi(command)-1)%20].input_string);
 			tokenize(copy);
-			runCommand();
+			restoreAlias();
+			if(words[0]!=NULL)
+				if(strcmp(words[0],"exit") == 0)	
+					if(words[1] != NULL)
+						printf("Exit doesn't take any parameters.\n");
+					else{		
+						setenv("PATH", orgPATH, 1);
+						printf("PATH : %s\n", getenv("PATH"));
+						save_history_to_file();
+						save_alias_to_file();
+						fclose(aliasFile);	
+						fclose(fp);
+						my_exit(0);
+					}
+				else{
+					runCommand();
+				}
 		}
 		else {
 			printf("Number larger than the number of commands stored.\n");
 		}
 	else{
 			printf("Invalid input passed.\n");
+	}
+}
+
+//restore alias to actual command
+void restoreAlias() {
+	char copy[512];
+	if(isAlias(words[0]) == 1)
+		for(int i=0;i<alias_number;i++)
+			if(strcmp(words[0],aliases[i].alias)==0) {
+				int word_count;			
+				for(word_count=0;word_count<50;word_count++)
+					if(words[word_count]==NULL)
+						break;						
+				const char s[] = "|><&; \t\n";
+				char *token;
+				int k=0;
+				strcpy(copy,aliases[i].actual_command);					
+				token = strtok(copy, s);
+				for(int i=0;i<word_count-1;i++)
+				strcpy(words[i],words[i+1]);
+				word_count --;		
+				while( token != NULL ) {
+					for(int j = word_count;j>k;j--)
+						words[j]=strdup(words[j-1]);
+      					words[k] = strdup(token);
+					k++;
+					word_count++;
+      					token = strtok(NULL, s);
+   				}
+		words[word_count] = NULL;
 	}
 }
 
